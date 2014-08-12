@@ -4,16 +4,15 @@ Create/restore a riak cluster on any cloudprovider using Terraform
 
 ## What
 
-[Riak](http://basho.com/riak/) is fine distributed key-value store.
-[Riak CS](http://basho.com/riak-cloud-storage/) is an addon so that you can build your own S3 compatible storage service, with Riak as a backend.
-[Terraform](http://www.terraform.io/) is a tool to launch clusters in the cloud, using nothing but simple configuration files.
+ - [Riak](http://basho.com/riak/) is fine distributed key-value store built by [Basho](http://basho.com/)
+ - [Riak CS](http://basho.com/riak-cloud-storage/) is an addon so that you can build your own S3 compatible storage service, with Riak as a backend.
+ - [Terraform](http://www.terraform.io/) is a tool to launch clusters in the cloud, using nothing but simple configuration files.
 
 **[riak-formation](https://github.com/kvz/riak-formation)** is a collection of config files and scripts that let you create/restore a Riak (CS) cluster in the cloud using a single command.
 
 ## Why
 
-Launching a Riak cluster can be involved. Hence
-[Basho](http://basho.com/) has
+Launching a Riak cluster can be involved. Hence Basho has
 [released a few scripts](https://github.com/basho/cloudformation-riak) for
 [AWS CloudFormation](http://aws.amazon.com/cloudformation/)
 to automate this.
