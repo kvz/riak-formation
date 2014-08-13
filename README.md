@@ -27,4 +27,13 @@ Terraform config uses the [HLC](https://github.com/hashicorp/hcl) configuration 
 
 First, **riak-formation** needs to know which cloud provider you wish to target, and the associated account. You can pass it these via environment config. Either directly on the commandline, or add them to `env.sh`.
 
+## Credits
 
+This project draws from
+
+ - [Installing on Debian and Ubuntu](http://docs.basho.com/riak/latest/ops/building/installing/debian-ubuntu/#Installing-From-Apt-Get)
+ - [How To Create a Riak Cluster on an Ubuntu VPS](https://www.digitalocean.com/community/tutorials/how-to-create-a-riak-cluster-on-an-ubuntu-vps)
+ - [Call Me Maybe: Carly Rae Jepsen and the Perils of Network Partitions - RICON East 2013](https://www.youtube.com/watch?v=mxdpqr-loyA)
+ - [Jepsen: ZK, NuoDB, Kafka, & Cassandra](https://www.youtube.com/watch?v=NsI51Mo6r3o) 
+ - [Kyle Kingsbury and Al Tobey - Cassandra and Go Doubleheader](https://www.youtube.com/watch?v=oEFqxi_n1vU)
+ 
