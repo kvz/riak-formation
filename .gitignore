@@ -4,3 +4,7 @@ envs/
 scripts/terraform/
 
 scripts/plan.bin
+
+scripts/terraform.tfstate
+
+scripts/terraform.tfstate.backup
