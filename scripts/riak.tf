@@ -11,7 +11,7 @@ resource "aws_instance" "server" {
     }
 
     provisioner "file" {
-        source = "${path.module}/envs/"
+        source = "${path.module}/../envs/"
         destination = "~/envs"
     }
 
@@ -21,7 +21,7 @@ resource "aws_instance" "server" {
     }
 
     provisioner "file" {
-        source = "${path.module}/node_modules/bash3boilerplate/"
+        source = "${path.module}/../node_modules/bash3boilerplate/"
         destination = "~/payload/bash3boilerplate"
     }
 
