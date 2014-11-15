@@ -1,9 +1,3 @@
-provider "aws" {
-    access_key = "${var.access_key}"
-    secret_key = "${var.secret_key}"
-    region     = "${var.region}"
-}
-
 resource "aws_instance" "server" {
     ami = "${lookup(var.ami, var.region)}"
     instance_type = "m1.small"
@@ -16,10 +10,26 @@ resource "aws_instance" "server" {
         key_file = "${var.key_path}"
     }
 
+    provisioner "file" {
+        source = "${path.module}/envs/"
+        destination = "~/envs"
+    }
+
+    provisioner "file" {
+        source = "${path.module}/payload/"
+        destination = "~/payload"
+    }
+
+    provisioner "file" {
+        source = "${path.module}/node_modules/bash3boilerplate/"
+        destination = "~/payload/bash3boilerplate"
+    }
+
     provisioner "remote-exec" {
         inline = [
             "echo ${var.servers} > /tmp/riak-server-count",
             "echo ${aws_instance.server.0.private_dns} > /tmp/riak-server-addr",
+            "source ~/envs/${var.deploy_env}.sh && sudo -HE ~/payload/install.sh",
         ]
     }
 }

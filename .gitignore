@@ -2,3 +2,5 @@ node_modules/
 scripts/payload/bash3boilerplate/
 envs/
 scripts/terraform/
+
+scripts/plan.bin

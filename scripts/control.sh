@@ -123,7 +123,7 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"
   # terraformArgs="${terraformArgs} -var RIFOR_DOMAIN=${RIFOR_DOMAIN}"
   terraformArgs="${terraformArgs} -var key_path=${RIFOR_SSH_KEY_FILE}"
   terraformArgs="${terraformArgs} -var key_name=${RIFOR_SSH_KEY_NAME}"
-
+  terraformArgs="${terraformArgs} -var deploy_env=${DEPLOY_ENV}"
 
   if [ "${action}" = "init" ]; then
     if [ ! -f terraform.tfstate ]; then
@@ -134,16 +134,15 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"
   fi
 
   if [ "${action}" = "plan" ]; then
-    ./terraform/terraform plan ${terraformArgs} -out ./plan
-    echo "--> Press CTRL+C now if you are unsure! Executing plan in 10s"
-    sleep 10
+    ./terraform/terraform plan ${terraformArgs} -out ./plan.bin
+    echo "--> Press CTRL+C now if you are unsure! Executing plan in ${RIFOR_VERIFY_TIMEOUT}s..."
+    [ "${dryRun}" -eq 1 ] && echo "--> Dry run break" && exit 1
+    sleep ${RIFOR_VERIFY_TIMEOUT}
     processed="${processed} ${action}" && continue
   fi
 
-  [ "${dryRun}" -eq 1 ] && echo "--> Dry run break" && exit 1
-
   if [ "${action}" = "launch" ]; then
-    ./terraform/terraform apply ${terraformArgs} ./plan
+    ./terraform/terraform apply ./plan.bin
     processed="${processed} ${action}" && continue
   fi
 
