@@ -19,6 +19,8 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
+RIFOR_LEADER_IP=$(cat /tmp/riak-leader-addr)
+
 if [ -z "${DEPLOY_ENV}" ]; then
   echo "Environment ${DEPLOY_ENV} not recognized. "
   echo "Please first source envs/development.sh or source envs/production.sh"
