@@ -54,21 +54,8 @@ function paint () (
 )
 
 
-echo "--> ${RIFOR_HOSTNAME} - Install node modules"
-exit 1
-if ! which coffee; then
-  paint npm install -g coffee-script
-fi
-cd "${RIFOR_APP_DIR}"
-paint npm install
-
-
 echo "--> ${RIFOR_HOSTNAME} - Setup file permissions"
 chown -R ${RIFOR_SERVICE_USER}.${RIFOR_SERVICE_GROUP} "${RIFOR_APP_DIR}"
-
-
-echo "--> ${RIFOR_HOSTNAME} - Reloading redis-server"
-sudo service redis-server restart || (sudo service redis-server stop; sudo service redis-server start)
 
 
 echo "--> ${RIFOR_HOSTNAME} - Reloading nginx"

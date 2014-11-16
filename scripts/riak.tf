@@ -26,10 +26,10 @@ resource "aws_instance" "server" {
     }
 
     provisioner "remote-exec" {
-        inline = [  
+        inline = [
             "echo ${var.servers} > /tmp/riak-server-count",
             "echo ${aws_instance.server.0.private_dns} > /tmp/riak-server-addr",
-            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE ~/payload/install.sh\"",
+            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE bash ~/payload/install.sh\"",
         ]
     }
 }

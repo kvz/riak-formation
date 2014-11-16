@@ -28,8 +28,8 @@ set -o nounset
 # set -o xtrace
 
 if [ -z "${DEPLOY_ENV}" ]; then
-  echo "Environment ${DEPLOY_ENV} not recognized. "
-  echo "Please first source envs/development.sh or source envs/production.sh"
+  echo "Deploy environment '${DEPLOY_ENV}' not recognized. "
+  echo "Please first e.g. source envs/production.sh"
   exit 1
 fi
 
@@ -90,7 +90,7 @@ find ~/.apt-updated -mmin -300 || (apt-get -qq update && touch ~/.apt-updated)
 
 if [ 1 -eq 1 ]; then
   echo "--> ${RIFOR_HOSTNAME} - Upgrade all packages"
-  apt-get -fy dist-upgrade
+  yes| apt-get -qqfy dist-upgrade
 else
   echo "--> ${RIFOR_HOSTNAME} - Upgrade packages with vulnerabilities"
   unattended-upgrade
@@ -103,6 +103,7 @@ if [ "$(cat /etc/timezone)" != "Etc/UTC" ]; then
   dpkg-reconfigure --frontend noninteractive tzdata
 fi
 
+
 echo "--> ${RIFOR_HOSTNAME} - Install system requirements"
 paint apt_install make
 paint apt_install figlet
@@ -113,34 +114,50 @@ echo "--> ${RIFOR_HOSTNAME} - Setup MOTD"
 echo "${RIFOR_APP_NAME} ${DEPLOY_ENV}" |figlet > /etc/motd
 
 
-# echo "--> ${RIFOR_HOSTNAME} - Install MySQL"
-# paint debconf-set-selections <<< "mysql-server mysql-server/root_password password ${RIFOR_MYSQL_ROOT_PASSWORD}"
-# paint debconf-set-selections <<< "mysql-server mysql-server/root_password_again password ${RIFOR_MYSQL_ROOT_PASSWORD}"
-# paint apt_install mysql-server 5.5.35
+echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for root user"
+if ! grep -q "envs/${DEPLOY_ENV}.sh" /root/.bashrc; then
+  # avoid the risk of an exit !=0 will prevent logins
+  echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /root/.bashrc
+  chown root /root/.bashrc
+fi
+if [ -d /home/vagrant ]; then
+  echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for vagrant user"
+  if ! grep -q "envs/${DEPLOY_ENV}.sh" /home/vagrant/.bashrc; then
+    # avoid the risk of an exit !=0 will prevent logins
+    echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /home/vagrant/.bashrc
+    chown vagrant /home/vagrant/.bashrc
+  fi
+fi
+if [ -d /home/ubuntu ]; then
+  echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for ubuntu user"
+  if ! grep -q "envs/${DEPLOY_ENV}.sh" /home/ubuntu/.bashrc; then
+    # avoid the risk of an exit !=0 will prevent logins
+    echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /home/ubuntu/.bashrc
+    chown ubuntu /home/ubuntu/.bashrc
+  fi
+fi
+
+paint apt_install htop
+paint apt_install iotop
+paint apt_install apg
+paint apt_install mtr
+paint apt_install logtail
+# paint apt_install git-core
 
 
-# echo "--> ${RIFOR_HOSTNAME} - Configure MySQL to allow connections from OSX. Production can stay local"
-# ./bash3boilerplate/src/templater.sh ./templates/mysql.sh /etc/mysql/my.cnf
-# service mysql restart
+echo "--> ${RIFOR_HOSTNAME} - Install Riak"
 
-# echo "--> ${RIFOR_HOSTNAME} - Setup MySQL database schema"
-# # Default (dev or production)
-# echo "CREATE DATABASE IF NOT EXISTS \`${RIFOR_MYSQL_DBNAME}\` DEFAULT CHARACTER SET utf8;" | paint mysql --defaults-file=/etc/mysql/debian.cnf
-# # Test (can be done on dev or production)
-# echo "CREATE DATABASE IF NOT EXISTS \`${RIFOR_MYSQL_TESTDBNAME}\` DEFAULT CHARACTER SET utf8;" | paint mysql --defaults-file=/etc/mysql/debian.cnf
+hostname=`hostname -f`
+filename=/etc/apt/sources.list.d/basho.list
+os=ubuntu
+dist=precise
+package_cloud_riak_dir=https://packagecloud.io/install/repositories/basho/riak
 
-
-# echo "--> ${RIFOR_HOSTNAME} - Setup MySQL user for app"
-# # Default (dev or production)
-# paint mysql -uroot -p${RIFOR_MYSQL_ROOT_PASSWORD} -e "GRANT ALL ON \`${RIFOR_MYSQL_DBNAME}\`.* to ${RIFOR_MYSQL_USER}@'%' IDENTIFIED BY \"${RIFOR_MYSQL_PASS}\";" ${RIFOR_MYSQL_DBNAME}
-# paint mysql -uroot -p${RIFOR_MYSQL_ROOT_PASSWORD} -e "GRANT ALL ON \`${RIFOR_MYSQL_DBNAME}\`.* to ${RIFOR_MYSQL_USER}@localhost IDENTIFIED BY \"${RIFOR_MYSQL_PASS}\";" ${RIFOR_MYSQL_DBNAME}
-# # Test (can be done on dev or production)
-# paint mysql -uroot -p${RIFOR_MYSQL_ROOT_PASSWORD} -e "GRANT ALL ON \`${RIFOR_MYSQL_TESTDBNAME}\`.* to ${RIFOR_MYSQL_USER}@'%' IDENTIFIED BY \"${RIFOR_MYSQL_PASS}\";" ${RIFOR_MYSQL_TESTDBNAME}
-# paint mysql -uroot -p${RIFOR_MYSQL_ROOT_PASSWORD} -e "GRANT ALL ON \`${RIFOR_MYSQL_TESTDBNAME}\`.* to ${RIFOR_MYSQL_USER}@localhost IDENTIFIED BY \"${RIFOR_MYSQL_PASS}\";" ${RIFOR_MYSQL_TESTDBNAME}
-
-
-echo "--> ${RIFOR_HOSTNAME} - Install Redis"
-paint apt_install redis-server
+if [ ! -f ${filename} ]; then
+  curl "${package_cloud_riak_dir}/config_file.list?os=${os}&dist=${dist}&name=${hostname}" |tee ${filename}
+  apt-get -qq update
+fi
+paint apt_install riak
 
 
 echo "--> ${RIFOR_HOSTNAME} - Install Nginx"
@@ -151,42 +168,6 @@ paint apt_install nginx 1.1.19
 ln -nfs /etc/nginx/{sites-available/${RIFOR_APP_NAME},sites-enabled/${RIFOR_APP_NAME}}
 rm -f /etc/nginx/sites-enabled/default
 service nginx restart
-
-
-echo "--> ${RIFOR_HOSTNAME} - Install Upstart script for ${RIFOR_APP_NAME}"
-./bash3boilerplate/src/templater.sh ./templates/upstart-${RIFOR_APP_NAME}.sh /etc/init/${RIFOR_APP_NAME}.conf
-
-
-echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for root user"
-if ! grep -q "envs/${DEPLOY_ENV}.sh" /root/.bashrc; then
-  # avoid the risk of an exit !=0 will prevent logins
-  echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /root/.bashrc
-fi
-if [ -d /home/vagrant ]; then
-  echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for vagrant user"
-  if ! grep -q "envs/${DEPLOY_ENV}.sh" /home/vagrant/.bashrc; then
-    # avoid the risk of an exit !=0 will prevent logins
-    echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /home/vagrant/.bashrc
-  fi
-fi
-
-paint apt_install htop
-paint apt_install iotop
-paint apt_install apg
-paint apt_install mtr
-paint apt_install logtail
-paint apt_install git-core
-paint apt_install python-pip
-
-
-echo "--> ${RIFOR_HOSTNAME} - Install node.js"
-if [ ! -f /etc/apt/sources.list.d/chris-lea-node_js-precise.list ]; then
-  paint apt_install python
-  paint apt_install python-software-properties
-  add-apt-repository --yes ppa:chris-lea/node.js
-  apt-get -qq update
-fi
-paint apt_install nodejs 0.10.26
 
 
 echo "--> ${RIFOR_HOSTNAME} - Install munin"
@@ -206,7 +187,7 @@ ln -nfsv /usr/share/munin/plugins/mysql_innodb      /etc/munin/plugins/
 ./bash3boilerplate/src/templater.sh ./templates/munin.sh /etc/munin/munin.conf
 munin-node-configure --suggest --shell 2>/dev/null | bash || true
 service munin-node restart
-chgrp -R ${RIFOR_SERVICE_GROUP} /var/cache/munin/www
+chgrp -R www-data /var/cache/munin/www
 
 
 echo "--> ${RIFOR_HOSTNAME} - Create app root"
