@@ -58,6 +58,15 @@ echo "--> ${RIFOR_HOSTNAME} - Setup file permissions"
 chown -R ${RIFOR_SERVICE_USER}.${RIFOR_SERVICE_GROUP} "${RIFOR_APP_DIR}"
 
 
+echo "--> ${RIFOR_HOSTNAME} - Reloading riak"
+riak-admin member-status
+riak-admin join ${RIFOR_LEADER_IP}
+riak-admin plan
+riak-admin commit
+
+sudo service riak reload || (sudo service riak stop; sudo service riak start)
+
+
 echo "--> ${RIFOR_HOSTNAME} - Reloading nginx"
 sudo service nginx reload || (sudo service nginx stop; sudo service nginx start)
 

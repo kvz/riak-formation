@@ -157,6 +157,9 @@ if [ ! -f ${filename} ]; then
   curl "${package_cloud_riak_dir}/config_file.list?os=${os}&dist=${dist}&name=${hostname}" |tee ${filename}
   apt-get -qq update
 fi
+# http://docs.basho.com/riak/latest/ops/building/installing/debian-ubuntu/#Advanced-apt-Installation
+paint apt_install libpam0g-dev
+paint apt_install libssl0.9.8
 paint apt_install riak
 
 
