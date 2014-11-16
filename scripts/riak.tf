@@ -11,25 +11,25 @@ resource "aws_instance" "server" {
     }
 
     provisioner "file" {
-        source = "${path.module}/../envs/"
-        destination = "~/envs"
+        source = "${path.module}/../envs"
+        destination = "~"
     }
 
     provisioner "file" {
-        source = "${path.module}/payload/"
+        source = "${path.module}/payload"
+        destination = "~"
+    }
+
+    provisioner "file" {
+        source = "${path.module}/../node_modules/bash3boilerplate"
         destination = "~/payload"
     }
 
-    provisioner "file" {
-        source = "${path.module}/../node_modules/bash3boilerplate/"
-        destination = "~/payload/bash3boilerplate"
-    }
-
     provisioner "remote-exec" {
-        inline = [
+        inline = [  
             "echo ${var.servers} > /tmp/riak-server-count",
             "echo ${aws_instance.server.0.private_dns} > /tmp/riak-server-addr",
-            "source ~/envs/${var.deploy_env}.sh && sudo -HE ~/payload/install.sh",
+            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE ~/payload/install.sh\"",
         ]
     }
 }
