@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-RIFOR_LEADER_IP=$(cat /tmp/riak-leader-addr)
+RIFOR_LEADER_IP="${RIFOR_LEADER_IP:-$(cat /tmp/riak-leader-addr)}"
 
 if [ -z "${DEPLOY_ENV}" ]; then
   echo "Environment ${DEPLOY_ENV} not recognized. "
@@ -56,8 +56,8 @@ function paint () (
 )
 
 
-echo "--> ${RIFOR_HOSTNAME} - Setup file permissions"
-chown -R ${RIFOR_SERVICE_USER}.${RIFOR_SERVICE_GROUP} "${RIFOR_APP_DIR}"
+# echo "--> ${RIFOR_HOSTNAME} - Setup file permissions"
+# chown -R ${RIFOR_SERVICE_USER}.${RIFOR_SERVICE_GROUP} "${RIFOR_APP_DIR}"
 
 
 echo "--> ${RIFOR_HOSTNAME} - Reloading riak"
