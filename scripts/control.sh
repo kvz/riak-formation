@@ -29,7 +29,7 @@
 set -o pipefail
 set -o errexit
 set -o nounset
-# set -o xtrace
+set -o xtrace
 
 # Set magic variables for current FILE & DIR
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,6 +38,35 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename ${__file} .sh)"
 
 terraform_version="0.3.1"
+
+
+### Functions
+####################################################################################
+
+function sync() {
+  [ -z "${remote_ip}" ] && remote_ip="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
+  chmod 600 ${RIFOR_SSH_KEY_FILE}*
+  rsync \
+   --archive \
+   --delete \
+   --exclude=.git* \
+   --exclude=node_modules \
+   --itemize-changes \
+   --checksum \
+   --no-times \
+   --no-group \
+   --no-motd \
+   --no-owner \
+   --rsh="ssh -i ${RIFOR_SSH_KEY_FILE} -l ${RIFOR_SSH_USER} -o StrictHostKeyChecking=no" \
+   ${@:2} \
+  ${remote_ip}:${1}
+}
+
+function remote() {
+  [ -z "${remote_ip}" ] && remote_ip="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
+  chmod 600 ${RIFOR_SSH_KEY_FILE}*
+  ssh ${remote_ip} -i "${RIFOR_SSH_KEY_FILE}" -l ${RIFOR_SSH_USER} -o StrictHostKeyChecking=no ${@:-}
+}
 
 
 ### Vars
@@ -53,7 +82,6 @@ remote_ip=""
 ### Runtime
 ####################################################################################
 
-
 if [ "${step}" = "remote" ]; then
   remote ${@:2}
   exit ${?}
@@ -61,7 +89,7 @@ fi
 
 pushd "${__dir}" > /dev/null
 processed=""
-for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"; do
+for action in "prepare" "init" "plan" "launch" "seed"; do
   [ "${action}" = "${step}" ] && enabled=1
   [ "${enabled}" -eq 0 ] && continue
   if [ -n "${processed}" ] && [ "${afterone}" = "done" ]; then
@@ -134,39 +162,26 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"
   fi
 
   if [ "${action}" = "plan" ]; then
+    rm -f ./plan.bin
     ./terraform/terraform plan ${terraformArgs} -out ./plan.bin
-    echo "--> Press CTRL+C now if you are unsure! Executing plan in ${RIFOR_VERIFY_TIMEOUT}s..."
-    [ "${dryRun}" -eq 1 ] && echo "--> Dry run break" && exit 1
-    sleep ${RIFOR_VERIFY_TIMEOUT}
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "launch" ]; then
-    ./terraform/terraform apply ./plan.bin
+    if [ -f ./plan.bin ]; then
+      echo "--> Press CTRL+C now if you are unsure! Executing plan in ${RIFOR_VERIFY_TIMEOUT}s..."
+      [ "${dryRun}" -eq 1 ] && echo "--> Dry run break" && exit 1
+      sleep ${RIFOR_VERIFY_TIMEOUT}
+      ./terraform/terraform apply ./plan.bin
+    else
+      echo "Skipping, no changes. "
+    fi
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "seed" ]; then
-    rsync -a --progress "${__root}/node_modules/bash3boilerplate/" "${__dir}/payload/bash3boilerplate"
     sync "~/" "${__dir}/payload" "${__root}/envs"
-    processed="${processed} ${action}" && continue
-  fi
-
-  if [ "${action}" = "install" ]; then
-    remote "source ~/envs/${DEPLOY_ENV}.sh && cd ~/payload && ./install.sh"
-    processed="${processed} ${action}" && continue
-  fi
-
-  if [ "${action}" = "upload" ]; then
-    # seed, because folks will expect upload to also refresh the setup.sh and envs:
-    ${__file} seed done > /dev/null
-    # actual app upload:
-    sync /srv/current "${__root}/" --exclude=envs --exclude=scripts
-    processed="${processed} ${action}" && continue
-  fi
-
-  if [ "${action}" = "setup" ]; then
-    remote "source ~/envs/${DEPLOY_ENV}.sh && cd ~/payload && ./setup.sh"
+    sync "~/payload/" "${__root}/node_modules/bash3boilerplate"
     processed="${processed} ${action}" && continue
   fi
 done

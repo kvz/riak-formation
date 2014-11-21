@@ -1,33 +1,20 @@
 SHELL     := /bin/bash
 
-deploy-production-full:
-	# Sets up all local & remote dependencies. Usefull for firs-time uses
-	# and to apply infra / software changes.
-	git checkout master
-	@test -z "$$(git status --porcelain)" || (echo "Please first commit/clean your Git working directory" && false)
-	git pull
-	source envs/production.sh && scripts/control.sh prepare
-
-deploy-production-full-unsafe:
-	# Sets up all local & remote dependencies. Usefull for firs-time uses
-	# and to apply infra / software changes.
-	# Does not check git index
-	git checkout master
-	git pull
-	source envs/production.sh && scripts/control.sh prepare
-
 deploy-production:
-	# For regular use. Just uploads the code and restarts the services
+	# Sets up all local & remote dependencies. Usefull for firs-time uses
+	# and to apply infra / software changes.
 	git checkout master
 	@test -z "$$(git status --porcelain)" || (echo "Please first commit/clean your Git working directory" && false)
 	git pull
-	source envs/production.sh && scripts/control.sh upload
+	source envs/production.sh && scripts/control.sh prepare
 
 deploy-production-unsafe:
+	# Sets up all local & remote dependencies. Usefull for firs-time uses
+	# and to apply infra / software changes.
 	# Does not check git index
 	git checkout master
 	git pull
-	source envs/production.sh && scripts/control.sh upload
+	source envs/production.sh && scripts/control.sh prepare
 
 ssh-production:
 	source envs/production.sh && scripts/control.sh remote
@@ -49,9 +36,7 @@ release-patch: build test
 
 .PHONY: \
 	deploy-production \
-	deploy-production-full \
 	deploy-production-unsafe \
-	deploy-production-full-unsafe \
 	release-major \
 	release-minor \
 	release-patch \

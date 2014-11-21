@@ -90,7 +90,7 @@ find ~/.apt-updated -mmin -300 || (apt-get -qq update && touch ~/.apt-updated)
 
 if [ 1 -eq 1 ]; then
   echo "--> ${RIFOR_HOSTNAME} - Upgrade all packages"
-  yes| apt-get -qqfy dist-upgrade
+  yes| apt-get -qqfy dist-upgrade || true
 else
   echo "--> ${RIFOR_HOSTNAME} - Upgrade packages with vulnerabilities"
   unattended-upgrade
@@ -166,8 +166,8 @@ paint apt_install riak
 echo "--> ${RIFOR_HOSTNAME} - Install Nginx"
 paint apt_install nginx 1.1.19
 
-./bash3boilerplate/src/templater.sh ./templates/nginx.sh /etc/nginx/nginx.conf
-./bash3boilerplate/src/templater.sh ./templates/nginx-vhost.sh /etc/nginx/sites-available/${RIFOR_APP_NAME}
+${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx.sh /etc/nginx/nginx.conf
+${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx-vhost.sh /etc/nginx/sites-available/${RIFOR_APP_NAME}
 ln -nfs /etc/nginx/{sites-available/${RIFOR_APP_NAME},sites-enabled/${RIFOR_APP_NAME}}
 rm -f /etc/nginx/sites-enabled/default
 service nginx restart
@@ -187,7 +187,7 @@ ln -nfsv /usr/share/munin/plugins/mysql_queries     /etc/munin/plugins/
 ln -nfsv /usr/share/munin/plugins/mysql_bytes       /etc/munin/plugins/
 ln -nfsv /usr/share/munin/plugins/mysql_innodb      /etc/munin/plugins/
 
-./bash3boilerplate/src/templater.sh ./templates/munin.sh /etc/munin/munin.conf
+${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/munin.sh /etc/munin/munin.conf
 munin-node-configure --suggest --shell 2>/dev/null | bash || true
 service munin-node restart
 chgrp -R www-data /var/cache/munin/www
