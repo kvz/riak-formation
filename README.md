@@ -25,7 +25,16 @@ Terraform config uses the [HLC](https://github.com/hashicorp/hcl) configuration 
 
 ## How
 
-First, **riak-formation** needs to know which cloud provider you wish to target, and the associated account. You can pass it these via environment config. Either directly on the commandline, or add them to `env.sh`.
+First, **riak-formation** needs to know which cloud provider you wish to target, and the associated account. You can pass it these via environment config. Either directly on the commandline, or add them to `envs/production.sh`.
+
+Now type `make launch`. riak-formation will launch as many machines as you defined, set up firewalls, install riak nodes, connect them together, set up Riak Control, and end with this summary:
+
+![screen shot 2014-11-21 at 21 12 26](https://cloud.githubusercontent.com/assets/26752/5148855/4d7712fe-71c3-11e4-8bc8-72577dfcd2b2.png)
+
+Click any of the links, and you're right in the control panel:
+
+![screen shot 2014-11-21 at 21 12 39](https://cloud.githubusercontent.com/assets/26752/5148857/4fc8815a-71c3-11e4-8fb0-2e2a6d04bf5c.png)
+
 
 ## Credits
 
