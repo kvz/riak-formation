@@ -21,7 +21,7 @@ While these scripts are more advanced than what **riak-formation** is aiming for
 
 Terraform works idempotent, meaning if it encounters servers that diverged from our config, we can just run it again and it will make all the required changes to restore our cluster as it was defined.
 
-Terraform config uses the [HLC](https://github.com/hashicorp/hcl) configuration language and is more dense than the `48.189 kb` CloudFormation JSON files, so it's easier to spot mistakes, and more fun to work on.
+Terraform config uses the [HLC](https://github.com/hashicorp/hcl) configuration language and is more [dense](https://github.com/kvz/riak-formation/blob/master/scripts/riak.tf) than the `48.189 kb` CloudFormation JSON files, so it's easy to spot mistakes, and more fun to work on.
 
 ## How
 
