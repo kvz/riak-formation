@@ -1,22 +1,24 @@
-SHELL     := /bin/bash
+SHELL := /usr/bin/env bash
 
-deploy-production:
-	# Sets up all local & remote dependencies. Usefull for firs-time uses
-	# and to apply infra / software changes.
+git-check:
 	git checkout master
 	@test -z "$$(git status --porcelain)" || (echo "Please first commit/clean your Git working directory" && false)
-	git pull
-	source envs/production.sh && scripts/control.sh prepare
 
-deploy-production-unsafe:
-	# Sets up all local & remote dependencies. Usefull for firs-time uses
-	# and to apply infra / software changes.
-	# Does not check git index
-	git checkout master
-	git pull
-	source envs/production.sh && scripts/control.sh prepare
+setup: git-check
+	@(MAKE) setup-unsafe
 
-ssh-production:
+setup-unsafe:
+	git pull
+	source envs/production.sh && scripts/control.sh setup
+
+launch: git-check
+	@(MAKE) launch-unsafe
+
+launch-unsafe:
+	git pull
+	source envs/production.sh && scripts/control.sh launch
+
+ssh:
 	source envs/production.sh && scripts/control.sh remote
 
 release-major: build test
@@ -35,9 +37,12 @@ release-patch: build test
 	npm publish
 
 .PHONY: \
-	deploy-production \
-	deploy-production-unsafe \
+	git-check \
+	setup \
+	setup-unsafe \
+	launch \
+	launch-unsafe \
 	release-major \
 	release-minor \
 	release-patch \
-	ssh-production \
+	ssh \

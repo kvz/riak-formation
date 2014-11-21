@@ -29,7 +29,7 @@
 set -o pipefail
 set -o errexit
 set -o nounset
-set -o xtrace
+# set -o xtrace
 
 # Set magic variables for current FILE & DIR
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -87,9 +87,19 @@ if [ "${step}" = "remote" ]; then
   exit ${?}
 fi
 
+if [ "${step}" = "setup" ]; then
+  sync "~/" "${__dir}/payload" "${__root}/envs"
+  sync "~/payload/" "${__root}/node_modules/bash3boilerplate"
+
+  # remote "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -HE bash ~/payload/install.sh\""
+  remote "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -HE bash ~/payload/setup.sh\""
+  exit ${?}
+fi
+
+
 pushd "${__dir}" > /dev/null
 processed=""
-for action in "prepare" "init" "plan" "launch" "seed"; do
+for action in "prepare" "init" "plan" "launch"; do
   [ "${action}" = "${step}" ] && enabled=1
   [ "${enabled}" -eq 0 ] && continue
   if [ -n "${processed}" ] && [ "${afterone}" = "done" ]; then
@@ -176,12 +186,6 @@ for action in "prepare" "init" "plan" "launch" "seed"; do
     else
       echo "Skipping, no changes. "
     fi
-    processed="${processed} ${action}" && continue
-  fi
-
-  if [ "${action}" = "seed" ]; then
-    sync "~/" "${__dir}/payload" "${__root}/envs"
-    sync "~/payload/" "${__root}/node_modules/bash3boilerplate"
     processed="${processed} ${action}" && continue
   fi
 done

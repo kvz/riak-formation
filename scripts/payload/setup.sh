@@ -56,23 +56,14 @@ function paint () (
 )
 
 
-# echo "--> ${RIFOR_HOSTNAME} - Setup file permissions"
-# chown -R ${RIFOR_SERVICE_USER}.${RIFOR_SERVICE_GROUP} "${RIFOR_APP_DIR}"
-
-
 echo "--> ${RIFOR_HOSTNAME} - Reloading riak"
+${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/riak.sh /etc/riak/riak.conf
+mount -o remount,noatime /var/lib/riak/bitcask
+ulimit -n 65536
+echo 'ulimit -n 65536' > /etc/default/riak
+service riak reload || (service riak stop; service riak start)
+riak-admin diag
 riak-admin member-status
-riak-admin join ${RIFOR_LEADER_IP}
-riak-admin plan
-riak-admin commit
-
-sudo service riak reload || (sudo service riak stop; sudo service riak start)
-
-
-echo "--> ${RIFOR_HOSTNAME} - Reloading nginx"
-sudo service nginx reload || (sudo service nginx stop; sudo service nginx start)
-
-
-echo "--> ${RIFOR_HOSTNAME} - Reloading ${RIFOR_APP_NAME}"
-sudo service ${RIFOR_APP_NAME} stop || true
-sudo service ${RIFOR_APP_NAME} start
+riak-admin cluster join ${RIFOR_LEADER_IP}
+riak-admin cluster plan
+riak-admin cluster commit

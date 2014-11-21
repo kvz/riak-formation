@@ -163,16 +163,6 @@ paint apt_install libssl0.9.8
 paint apt_install riak
 
 
-echo "--> ${RIFOR_HOSTNAME} - Install Nginx"
-paint apt_install nginx 1.1.19
-
-${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx.sh /etc/nginx/nginx.conf
-${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx-vhost.sh /etc/nginx/sites-available/${RIFOR_APP_NAME}
-ln -nfs /etc/nginx/{sites-available/${RIFOR_APP_NAME},sites-enabled/${RIFOR_APP_NAME}}
-rm -f /etc/nginx/sites-enabled/default
-service nginx restart
-
-
 echo "--> ${RIFOR_HOSTNAME} - Install munin"
 apt_install munin
 apt_install munin-node

@@ -29,8 +29,8 @@ resource "aws_instance" "server" {
         inline = [
             "echo ${var.servers} > /tmp/riak-server-count",
             "echo ${aws_instance.server.0.private_dns} > /tmp/riak-leader-addr",
-            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE bash ~/payload/install.sh\""
-            // "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE env RIFOR_LEADER_IP=${aws_instance.server.0.private_dns} bash ~/payload/setup.sh\"",
+            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE bash ~/payload/install.sh\"",
+            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE env RIFOR_LEADER_IP=${aws_instance.server.0.private_dns} bash ~/payload/setup.sh\""
         ]
     }
 }
