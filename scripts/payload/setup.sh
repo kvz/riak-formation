@@ -57,7 +57,31 @@ function paint () (
 )
 
 
-echo "--> ${RIFOR_HOSTNAME} - Reloading riak"
+echo "--> ${RIFOR_HOSTNAME} - Reloading Nginx"
+bash ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx.sh /etc/nginx/nginx.conf
+bash ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx-vhost.sh /etc/nginx/sites-available/${RIFOR_APP_NAME}
+ln -nfs /etc/nginx/{sites-available/${RIFOR_APP_NAME},sites-enabled/${RIFOR_APP_NAME}}
+rm -f /etc/nginx/sites-enabled/default
+service nginx restart
+
+
+echo "--> ${RIFOR_HOSTNAME} - Reloading Munin"
+htpasswd -b -c /etc/nginx/htpasswd ${RIFOR_MUNIN_WEB_USER} ${RIFOR_MUNIN_WEB_PASS}
+ln -nfsv /usr/share/munin/plugins/nginx_request     /etc/munin/plugins/
+ln -nfsv /usr/share/munin/plugins/nginx_status      /etc/munin/plugins/
+ln -nfsv /usr/share/munin/plugins/mysql_slowqueries /etc/munin/plugins/
+ln -nfsv /usr/share/munin/plugins/mysql_threads     /etc/munin/plugins/
+ln -nfsv /usr/share/munin/plugins/mysql_queries     /etc/munin/plugins/
+ln -nfsv /usr/share/munin/plugins/mysql_bytes       /etc/munin/plugins/
+ln -nfsv /usr/share/munin/plugins/mysql_innodb      /etc/munin/plugins/
+
+${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/munin.sh /etc/munin/munin.conf
+munin-node-configure --suggest --shell 2>/dev/null | bash || true
+chgrp -R www-data /var/cache/munin/www
+service munin-node restart
+
+
+echo "--> ${RIFOR_HOSTNAME} - Reloading Riak"
 bash ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/riak.sh /etc/riak/riak.conf
 # mount -o remount,noatime /var/lib/riak/bitcask # <-- @todo: mount separate device for this
 ulimit -n 65536

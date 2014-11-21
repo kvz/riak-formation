@@ -163,24 +163,15 @@ paint apt_install libssl0.9.8
 paint apt_install riak
 
 
-echo "--> ${RIFOR_HOSTNAME} - Install munin"
+echo "--> ${RIFOR_HOSTNAME} - Install Nginx"
+paint apt_install nginx 1.1.19
+
+
+echo "--> ${RIFOR_HOSTNAME} - Install Munin"
 apt_install munin
 apt_install munin-node
 apt_install munin-plugins-extra
 apt_install apache2-utils
-# htpasswd -b -c /etc/nginx/htpasswd ${RIFOR_MUNIN_WEB_USER} ${RIFOR_MUNIN_WEB_PASS}
-ln -nfsv /usr/share/munin/plugins/nginx_request     /etc/munin/plugins/
-ln -nfsv /usr/share/munin/plugins/nginx_status      /etc/munin/plugins/
-ln -nfsv /usr/share/munin/plugins/mysql_slowqueries /etc/munin/plugins/
-ln -nfsv /usr/share/munin/plugins/mysql_threads     /etc/munin/plugins/
-ln -nfsv /usr/share/munin/plugins/mysql_queries     /etc/munin/plugins/
-ln -nfsv /usr/share/munin/plugins/mysql_bytes       /etc/munin/plugins/
-ln -nfsv /usr/share/munin/plugins/mysql_innodb      /etc/munin/plugins/
-
-${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/munin.sh /etc/munin/munin.conf
-munin-node-configure --suggest --shell 2>/dev/null | bash || true
-service munin-node restart
-chgrp -R www-data /var/cache/munin/www
 
 
 echo "--> ${RIFOR_HOSTNAME} - Create app root"

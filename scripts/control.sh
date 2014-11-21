@@ -43,17 +43,6 @@ terraform_version="0.3.1"
 ### Functions
 ####################################################################################
 
-function syncAll () {
-  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
-    sync ${@}
-  done
-}
-function remoteAll () {
-  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
-    remote ${@}
-  done
-}
-
 function sync() {
   [ -z "${host}" ] && host="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
@@ -68,7 +57,11 @@ function sync() {
    --no-group \
    --no-motd \
    --no-owner \
-   --rsh="ssh -i ${RIFOR_SSH_KEY_FILE} -l ${RIFOR_SSH_USER} -o StrictHostKeyChecking=no" \
+   --rsh="ssh \
+    -i \"${RIFOR_SSH_KEY_FILE}\" \
+    -l ${RIFOR_SSH_USER} \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no" \
    ${@:2} \
   ${host}:${1}
 }
@@ -76,7 +69,35 @@ function sync() {
 function remote() {
   [ -z "${host}" ] && host="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
-  ssh ${host} -i "${RIFOR_SSH_KEY_FILE}" -l ${RIFOR_SSH_USER} -o StrictHostKeyChecking=no ${@:-}
+  ssh ${host} \
+    -i "${RIFOR_SSH_KEY_FILE}" \
+    -l ${RIFOR_SSH_USER} \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no ${@:-}
+}
+
+# Waits on first host, then does the rest in parallel
+# This is so that the leader can be setup, and then all the followers can join
+function inParallel () {
+  cnt=0
+  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+    let "cnt = cnt + 1"
+    if [ "${cnt}" = 1 ]; then
+      # wait on leader leader
+      ${@}
+    else
+      ${@} &
+    fi
+  done
+
+  fail=0
+  for job in `jobs -p`; do
+    # echo ${job}
+    wait ${job} || let "fail = fail + 1"
+  done
+  if [ "${fail}" -ne 0 ]; then
+    exit 1
+  fi
 }
 
 
@@ -191,18 +212,18 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup"; do
   fi
 
   if [ "${action}" = "seed" ]; then
-    syncAll "~/" "${__dir}/payload" "${__root}/envs"
-    syncAll "~/payload/" "${__root}/node_modules/bash3boilerplate"
+    inParallel "sync" "~/" "${__dir}/payload" "${__root}/envs"
+    inParallel "sync" "~/payload/" "${__root}/node_modules/bash3boilerplate"
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "install" ]; then
-    remoteAll "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/install.sh\""
+    inParallel "remote" "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/install.sh\""
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "setup" ]; then
-    remoteAll "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/setup.sh\""
+    inParallel "remote" "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/setup.sh\""
     processed="${processed} ${action}" && continue
   fi
 done
