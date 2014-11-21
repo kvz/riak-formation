@@ -10,21 +10,6 @@ resource "aws_instance" "server" {
         key_file = "${var.key_path}"
     }
 
-    provisioner "file" {
-        source = "${path.module}/../envs"
-        destination = "~"
-    }
-
-    provisioner "file" {
-        source = "${path.module}/payload"
-        destination = "~"
-    }
-
-    provisioner "file" {
-        source = "${path.module}/../node_modules/bash3boilerplate"
-        destination = "~/payload"
-    }
-
     provisioner "remote-exec" {
         inline = [
             "echo ${var.servers} > ~/riak-server-count",

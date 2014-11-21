@@ -193,9 +193,6 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup"; do
   if [ "${action}" = "seed" ]; then
     syncAll "~/" "${__dir}/payload" "${__root}/envs"
     syncAll "~/payload/" "${__root}/node_modules/bash3boilerplate"
-
-    echo "SAFEABORT"
-    exit 0
     processed="${processed} ${action}" && continue
   fi
 
