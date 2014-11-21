@@ -91,7 +91,7 @@ function inParallel () {
   done
 
   fail=0
-  for job in `jobs -p`; do
+  for job in $(jobs -p); do
     # echo ${job}
     wait ${job} || let "fail = fail + 1"
   done
@@ -117,6 +117,17 @@ host=""
 if [ "${step}" = "remote" ]; then
   remote ${@:2}
   exit ${?}
+fi
+
+if [ "${step}" = "remote_follower" ]; then
+  cnt=0
+  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+    let "cnt = cnt + 1"
+    if [ "${cnt}" = 2 ]; then
+      remote ${@:2}
+      exit $?
+    fi
+  done
 fi
 
 pushd "${__dir}" > /dev/null
@@ -212,8 +223,10 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup"; do
   fi
 
   if [ "${action}" = "seed" ]; then
+    # First copy bash3boilerplate locally
+    rsync -a --progress --delete ${__root}/node_modules/bash3boilerplate/ ${__dir}/payload/bash3boilerplate
+    # Then sync upstream
     inParallel "sync" "~/" "${__dir}/payload" "${__root}/envs"
-    inParallel "sync" "~/payload/" "${__root}/node_modules/bash3boilerplate"
     processed="${processed} ${action}" && continue
   fi
 

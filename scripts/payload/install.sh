@@ -115,13 +115,10 @@ echo "${RIFOR_APP_NAME} ${DEPLOY_ENV}" |figlet > /etc/motd
 
 
 echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for root user"
-if ! grep -q "envs/${DEPLOY_ENV}.sh" /root/.bashrc; then
-  # avoid the risk of an exit !=0 will prevent logins
-  echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /root/.bashrc
-  chown root /root/.bashrc
-fi
+envUser=""
 if [ -d /home/vagrant ]; then
   echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for vagrant user"
+  envUser="vagrant"
   if ! grep -q "envs/${DEPLOY_ENV}.sh" /home/vagrant/.bashrc; then
     # avoid the risk of an exit !=0 will prevent logins
     echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /home/vagrant/.bashrc
@@ -130,11 +127,17 @@ if [ -d /home/vagrant ]; then
 fi
 if [ -d /home/ubuntu ]; then
   echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for ubuntu user"
+  envUser="ubuntu"
   if ! grep -q "envs/${DEPLOY_ENV}.sh" /home/ubuntu/.bashrc; then
     # avoid the risk of an exit !=0 will prevent logins
     echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /home/ubuntu/.bashrc
     chown ubuntu /home/ubuntu/.bashrc
   fi
+fi
+if ! grep -q "envs/${DEPLOY_ENV}.sh" /root/.bashrc; then
+  # avoid the risk of an exit !=0 will prevent logins
+  echo "cd \"${RIFOR_APP_DIR}\" && source ~${envUser}/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /root/.bashrc
+  chown root /root/.bashrc
 fi
 
 paint apt_install htop

@@ -22,6 +22,9 @@ launch-unsafe:
 ssh-leader:
 	source envs/production.sh && scripts/control.sh remote
 
+ssh-follower:
+	source envs/production.sh && scripts/control.sh remote_follower
+
 release-major: build test
 	npm version major -m "Release %s"
 	git push
@@ -47,3 +50,4 @@ release-patch: build test
 	release-minor \
 	release-patch \
 	ssh-leader \
+	ssh-follower \
