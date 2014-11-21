@@ -43,8 +43,19 @@ terraform_version="0.3.1"
 ### Functions
 ####################################################################################
 
+function syncAll () {
+  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+    sync ${@}
+  done
+}
+function remoteAll () {
+  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+    remote ${@}
+  done
+}
+
 function sync() {
-  [ -z "${remote_ip}" ] && remote_ip="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
+  [ -z "${host}" ] && host="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
   rsync \
    --archive \
@@ -59,13 +70,13 @@ function sync() {
    --no-owner \
    --rsh="ssh -i ${RIFOR_SSH_KEY_FILE} -l ${RIFOR_SSH_USER} -o StrictHostKeyChecking=no" \
    ${@:2} \
-  ${remote_ip}:${1}
+  ${host}:${1}
 }
 
 function remote() {
-  [ -z "${remote_ip}" ] && remote_ip="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
+  [ -z "${host}" ] && host="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
-  ssh ${remote_ip} -i "${RIFOR_SSH_KEY_FILE}" -l ${RIFOR_SSH_USER} -o StrictHostKeyChecking=no ${@:-}
+  ssh ${host} -i "${RIFOR_SSH_KEY_FILE}" -l ${RIFOR_SSH_USER} -o StrictHostKeyChecking=no ${@:-}
 }
 
 
@@ -76,7 +87,7 @@ dryRun="${RIFOR_DRYRUN:-0}"
 step="${1:-prepare}"
 afterone="${2:-}"
 enabled=0
-remote_ip=""
+host=""
 
 
 ### Runtime
@@ -87,19 +98,9 @@ if [ "${step}" = "remote" ]; then
   exit ${?}
 fi
 
-if [ "${step}" = "setup" ]; then
-  sync "~/" "${__dir}/payload" "${__root}/envs"
-  sync "~/payload/" "${__root}/node_modules/bash3boilerplate"
-
-  # remote "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -HE bash ~/payload/install.sh\""
-  remote "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -HE bash ~/payload/setup.sh\""
-  exit ${?}
-fi
-
-
 pushd "${__dir}" > /dev/null
 processed=""
-for action in "prepare" "init" "plan" "launch"; do
+for action in "prepare" "init" "plan" "launch" "seed" "install" "setup"; do
   [ "${action}" = "${step}" ] && enabled=1
   [ "${enabled}" -eq 0 ] && continue
   if [ -n "${processed}" ] && [ "${afterone}" = "done" ]; then
@@ -186,6 +187,25 @@ for action in "prepare" "init" "plan" "launch"; do
     else
       echo "Skipping, no changes. "
     fi
+    processed="${processed} ${action}" && continue
+  fi
+
+  if [ "${action}" = "seed" ]; then
+    syncAll "~/" "${__dir}/payload" "${__root}/envs"
+    syncAll "~/payload/" "${__root}/node_modules/bash3boilerplate"
+
+    echo "SAFEABORT"
+    exit 0
+    processed="${processed} ${action}" && continue
+  fi
+
+  if [ "${action}" = "install" ]; then
+    remoteAll "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/install.sh\""
+    processed="${processed} ${action}" && continue
+  fi
+
+  if [ "${action}" = "setup" ]; then
+    remoteAll "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/setup.sh\""
     processed="${processed} ${action}" && continue
   fi
 done

@@ -1,6 +1,6 @@
 resource "aws_instance" "server" {
     ami = "${lookup(var.ami, var.region)}"
-    instance_type = "m1.small"
+    instance_type = "c1.medium"
     key_name = "${var.key_name}"
     count = "${var.servers}"
     security_groups = ["${aws_security_group.riak.name}"]
@@ -27,10 +27,9 @@ resource "aws_instance" "server" {
 
     provisioner "remote-exec" {
         inline = [
-            "echo ${var.servers} > /tmp/riak-server-count",
-            "echo ${aws_instance.server.0.private_dns} > /tmp/riak-leader-addr",
-            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE bash ~/payload/install.sh\"",
-            "bash -c \"source ~/envs/${var.deploy_env}.sh && sudo -HE env RIFOR_LEADER_IP=${aws_instance.server.0.private_dns} bash ~/payload/setup.sh\""
+            "echo ${var.servers} > ~/riak-server-count",
+            "echo ${aws_instance.server.0.private_dns} > ~/riak-leader-addr",
+            "curl --silent --retry 3 http://169.254.169.254/latest/meta-data/local-hostname > ~/riak-self-addr",
         ]
     }
 }

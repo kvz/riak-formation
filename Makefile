@@ -9,6 +9,7 @@ setup: git-check
 
 setup-unsafe:
 	git pull
+	source envs/production.sh && scripts/control.sh seed done
 	source envs/production.sh && scripts/control.sh setup
 
 launch: git-check
@@ -16,9 +17,9 @@ launch: git-check
 
 launch-unsafe:
 	git pull
-	source envs/production.sh && scripts/control.sh launch
+	source envs/production.sh && scripts/control.sh init
 
-ssh:
+ssh-leader:
 	source envs/production.sh && scripts/control.sh remote
 
 release-major: build test
@@ -45,4 +46,4 @@ release-patch: build test
 	release-major \
 	release-minor \
 	release-patch \
-	ssh \
+	ssh-leader \

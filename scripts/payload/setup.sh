@@ -19,7 +19,8 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-RIFOR_LEADER_IP="${RIFOR_LEADER_IP:-$(cat /tmp/riak-leader-addr)}"
+leaderAddr="$(cat ~/riak-leader-addr)"
+selfAddr="$(cat ~/riak-self-addr)"
 
 if [ -z "${DEPLOY_ENV}" ]; then
   echo "Environment ${DEPLOY_ENV} not recognized. "
@@ -57,13 +58,15 @@ function paint () (
 
 
 echo "--> ${RIFOR_HOSTNAME} - Reloading riak"
-${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/riak.sh /etc/riak/riak.conf
+bash ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/riak.sh /etc/riak/riak.conf
 # mount -o remount,noatime /var/lib/riak/bitcask # <-- @todo: mount separate device for this
 ulimit -n 65536
 echo 'ulimit -n 65536' > /etc/default/riak
 service riak reload || (service riak stop; service riak start)
 riak-admin diag
 riak-admin member-status
-riak-admin cluster join ${RIFOR_LEADER_IP}
+if [ "${leaderAddr}" != "${selfAddr}" ]; then
+  riak-admin cluster join ${leaderAddr}
+fi
 riak-admin cluster plan
 riak-admin cluster commit
