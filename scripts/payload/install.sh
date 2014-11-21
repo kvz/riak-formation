@@ -145,6 +145,7 @@ paint apt_install iotop
 paint apt_install apg
 paint apt_install mtr
 paint apt_install logtail
+paint apt_install realpath
 # paint apt_install git-core
 
 

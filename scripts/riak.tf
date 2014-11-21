@@ -23,7 +23,7 @@ resource "aws_instance" "server" {
 
 resource "aws_security_group" "riak" {
     name = "riak"
-    description = "Consul internal traffic + maintenance."
+    description = "Internal traffic + maintenance."
 
     // These are for internal traffic
     ingress {
@@ -44,6 +44,14 @@ resource "aws_security_group" "riak" {
     ingress {
         from_port = 22
         to_port = 22
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    // These are for maintenance
+    ingress {
+        from_port = 8069
+        to_port = 8069
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }

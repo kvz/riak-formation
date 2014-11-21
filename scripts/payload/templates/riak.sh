@@ -204,6 +204,7 @@ erlang.max_ports = 65536
 ## Acceptable values:
 ##   - the path to a file
 ## ssl.certfile = $(platform_etc_dir)/cert.pem
+ssl.certfile = $(platform_etc_dir)/selfsigned.crt
 
 ## Default key location for https can be overridden with the ssl
 ## config variable, for example:
@@ -211,6 +212,7 @@ erlang.max_ports = 65536
 ## Acceptable values:
 ##   - the path to a file
 ## ssl.keyfile = $(platform_etc_dir)/key.pem
+ssl.keyfile = $(platform_etc_dir)/selfsigned.key
 
 ## Default signing authority location for https can be overridden
 ## with the ssl config variable, for example:
@@ -218,6 +220,7 @@ erlang.max_ports = 65536
 ## Acceptable values:
 ##   - the path to a file
 ## ssl.cacertfile = $(platform_etc_dir)/cacertfile.pem
+# ssl.cacertfile = $(platform_etc_dir)/selfsigned.csr
 
 ## DTrace support Do not enable 'dtrace' unless your Erlang/OTP
 ## runtime is compiled to support DTrace.  DTrace is available in
@@ -282,7 +285,7 @@ platform_log_dir = /var/log/riak
 ##
 ## Acceptable values:
 ##   - an IP/port pair, e.g. 127.0.0.1:10011
-listener.http.internal = 0.0.0.0:8098
+# listener.http.internal = 127.0.0.1:8098
 
 ## listener.protobuf.<name> is an IP address and TCP port that the Riak
 ## Protocol Buffers interface will bind.
@@ -310,6 +313,7 @@ listener.protobuf.internal = 0.0.0.0:8087
 ## Acceptable values:
 ##   - an IP/port pair, e.g. 127.0.0.1:10011
 ## listener.https.internal = 127.0.0.1:8098
+listener.https.internal = 0.0.0.0:8069
 
 ## How Riak will repair out-of-sync keys. Some features require
 ## this to be set to 'active', including search.
@@ -409,7 +413,7 @@ bitcask.io_mode = erlang
 ##
 ## Acceptable values:
 ##   - on or off
-riak_control = off
+riak_control = on
 
 ## Authentication mode used for access to the admin panel.
 ##
@@ -417,7 +421,7 @@ riak_control = off
 ##
 ## Acceptable values:
 ##   - one of: off, userlist
-riak_control.auth.mode = off
+riak_control.auth.mode = userlist
 
 ## If riak control's authentication mode (riak_control.auth.mode)
 ## is set to 'userlist' then this is the list of usernames and
@@ -430,6 +434,7 @@ riak_control.auth.mode = off
 ## Acceptable values:
 ##   - text
 ## riak_control.auth.user.admin.password = pass
+riak_control.auth.user.${RIFOR_USER}.password = ${RIFOR_PASS}
 
 ## This parameter defines the percentage of total server memory
 ## to assign to LevelDB. LevelDB will dynamically adjust its internal

@@ -78,16 +78,46 @@ chgrp -R www-data /var/cache/munin/www
 service munin-node restart
 
 
+echo "--> ${RIFOR_HOSTNAME} - Install Self signed certificate"
+rsync -a --progress ${__dir}/ssl/* /etc/riak/
+pushd /etc/riak
+  if [ ! -f server.key ]; then
+    openssl req -nodes -x509 -newkey rsa:4096 -keyout server.key -out server.csr -days 356 -subj "/C=US/ST=Oregon/L=Portland/O=IT/CN=www.example.com"
+  fi
+popd
+
+
 echo "--> ${RIFOR_HOSTNAME} - Reloading Riak"
 bash ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/riak.sh /etc/riak/riak.conf
 # mount -o remount,noatime /var/lib/riak/bitcask # <-- @todo: mount separate device for this
 ulimit -n 65536
 echo 'ulimit -n 65536' > /etc/default/riak
 service riak reload || (service riak stop; service riak start)
-riak-admin diag
-riak-admin member-status
-if [ "${RIFOR_LEADER_PRIVATE_IP}" != "${RIFOR_SELF_PRIVATE_IP}" ]; then
-  riak-admin cluster join ${RIFOR_LEADER_PRIVATE_IP}
+
+# riak-admin diag
+
+if [ "${RIFOR_LEADER_PRIVATE_IP}" == "${RIFOR_SELF_PRIVATE_IP}" ]; then
+  echo "I am the first node, so no joining"
+else
+  if riak-admin member-status |grep "${RIFOR_SELF_PRIVATE_IP}" |egrep '^(valid|joining)'; then
+    if riak-admin member-status |grep "${RIFOR_LEADER_PRIVATE_IP}" |egrep '^(valid|joining)'; then
+      echo "Already joined the correct cluster"
+    else
+      echo "In the wrong cluster, could not find leader. Leaving"
+      riak-admin cluster leave riak@${RIFOR_LEADER_PRIVATE_IP}
+      riak-admin cluster plan
+      riak-admin cluster commit
+    fi
+  fi
+
+  if ! riak-admin member-status |grep "${RIFOR_SELF_PRIVATE_IP}" |egrep '^(valid|joining)'; then
+    echo "Joing cluster"
+    riak-admin cluster join riak@${RIFOR_LEADER_PRIVATE_IP}
+    riak-admin cluster plan
+    riak-admin cluster commit
+  fi
 fi
-riak-admin cluster plan
-riak-admin cluster commit
+
+riak-admin member-status
+
+# riak-admin ring_status

@@ -73,7 +73,7 @@ function remote() {
     -i "${RIFOR_SSH_KEY_FILE}" \
     -l ${RIFOR_SSH_USER} \
     -o UserKnownHostsFile=/dev/null \
-    -o StrictHostKeyChecking=no ${@:-}
+    -o StrictHostKeyChecking=no "${@:-}"
 }
 
 # Waits on first host, then does the rest in parallel
@@ -132,7 +132,7 @@ fi
 
 pushd "${__dir}" > /dev/null
 processed=""
-for action in "prepare" "init" "plan" "launch" "seed" "install" "setup"; do
+for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; do
   [ "${action}" = "${step}" ] && enabled=1
   [ "${enabled}" -eq 0 ] && continue
   if [ -n "${processed}" ] && [ "${afterone}" = "done" ]; then
@@ -237,6 +237,16 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup"; do
 
   if [ "${action}" = "setup" ]; then
     inParallel "remote" "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/setup.sh\""
+    processed="${processed} ${action}" && continue
+  fi
+
+  if [ "${action}" = "show" ]; then
+    remote "sudo riak-admin status | grep riak_kv_version"
+
+    for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+      echo "https://${RIFOR_USER}:${RIFOR_PASS}@${host}:8069/admin#/snapshot"
+    done
+
     processed="${processed} ${action}" && continue
   fi
 done
