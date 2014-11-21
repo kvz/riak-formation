@@ -168,7 +168,7 @@ apt_install munin
 apt_install munin-node
 apt_install munin-plugins-extra
 apt_install apache2-utils
-htpasswd -b -c /etc/nginx/htpasswd ${RIFOR_MUNIN_WEB_USER} ${RIFOR_MUNIN_WEB_PASS}
+# htpasswd -b -c /etc/nginx/htpasswd ${RIFOR_MUNIN_WEB_USER} ${RIFOR_MUNIN_WEB_PASS}
 ln -nfsv /usr/share/munin/plugins/nginx_request     /etc/munin/plugins/
 ln -nfsv /usr/share/munin/plugins/nginx_status      /etc/munin/plugins/
 ln -nfsv /usr/share/munin/plugins/mysql_slowqueries /etc/munin/plugins/
