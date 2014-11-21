@@ -1,6 +1,6 @@
 resource "aws_instance" "server" {
     ami = "${lookup(var.ami, var.region)}"
-    instance_type = "c1.medium"
+    instance_type = "m1.small"
     key_name = "${var.key_name}"
     count = "${var.servers}"
     security_groups = ["${aws_security_group.riak.name}"]
@@ -15,6 +15,7 @@ resource "aws_instance" "server" {
             "echo ${var.servers} > ~/riak-server-count",
             "echo ${aws_instance.server.0.private_dns} > ~/riak-leader-addr",
             "curl --silent --retry 3 http://169.254.169.254/latest/meta-data/local-hostname > ~/riak-self-addr",
+            "curl --silent --retry 3 http://169.254.169.254/latest/meta-data/local-ipv4 > ~/riak-self-private-ip",
         ]
     }
 }

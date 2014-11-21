@@ -16,3 +16,9 @@ export RIFOR_SSH_USER="ubuntu"
 export RIFOR_VERIFY_TIMEOUT="10"
 export RIFOR_MUNIN_WEB_USER="munin"
 export RIFOR_MUNIN_WEB_PASS="munin"
+
+export RIFOR_SERVER_COUNT="$(cat ~/riak-server-count 2>/dev/null)" || true
+export RIFOR_LEADER_ADDR="$(cat ~/riak-leader-addr 2>/dev/null)" || true
+export RIFOR_SELF_ADDR="$(cat ~/riak-self-addr 2>/dev/null)" || true
+export RIFOR_SELF_PRIVATE_IP="$(cat ~/riak-self-private-ip 2>/dev/null)" || true
+export RIFOR_NODENAME="riak@${RIFOR_SELF_PRIVATE_IP}"

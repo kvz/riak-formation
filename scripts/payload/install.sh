@@ -136,7 +136,7 @@ if [ -d /home/ubuntu ]; then
 fi
 if ! grep -q "envs/${DEPLOY_ENV}.sh" /root/.bashrc; then
   # avoid the risk of an exit !=0 will prevent logins
-  echo "cd \"${RIFOR_APP_DIR}\" && source ~${envUser}/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /root/.bashrc
+  echo "cd \"${RIFOR_APP_DIR}\" && source ~${envUser}/envs/${DEPLOY_ENV}.sh && source ${envUser}/payload/login.sh || true" >> /root/.bashrc
   chown root /root/.bashrc
 fi
 
