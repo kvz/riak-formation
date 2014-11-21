@@ -58,7 +58,7 @@ function paint () (
 
 echo "--> ${RIFOR_HOSTNAME} - Reloading riak"
 ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/riak.sh /etc/riak/riak.conf
-mount -o remount,noatime /var/lib/riak/bitcask
+# mount -o remount,noatime /var/lib/riak/bitcask # <-- @todo: mount separate device for this
 ulimit -n 65536
 echo 'ulimit -n 65536' > /etc/default/riak
 service riak reload || (service riak stop; service riak start)
