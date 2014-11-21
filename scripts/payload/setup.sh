@@ -19,9 +19,6 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-leaderAddr="$(cat ~/riak-leader-addr)"
-selfAddr="$(cat ~/riak-self-addr)"
-
 if [ -z "${DEPLOY_ENV}" ]; then
   echo "Environment ${DEPLOY_ENV} not recognized. "
   echo "Please first source envs/development.sh or source envs/production.sh"
@@ -89,8 +86,8 @@ echo 'ulimit -n 65536' > /etc/default/riak
 service riak reload || (service riak stop; service riak start)
 riak-admin diag
 riak-admin member-status
-if [ "${leaderAddr}" != "${selfAddr}" ]; then
-  riak-admin cluster join ${leaderAddr}
+if [ "${RIFOR_LEADER_PRIVATE_IP}" != "${RIFOR_SELF_PRIVATE_IP}" ]; then
+  riak-admin cluster join ${RIFOR_LEADER_PRIVATE_IP}
 fi
 riak-admin cluster plan
 riak-admin cluster commit
