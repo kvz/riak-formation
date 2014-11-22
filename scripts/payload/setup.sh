@@ -120,4 +120,29 @@ fi
 
 riak-admin member-status
 
+
+riak-admin security enable
+riak-admin security add-group admin
+riak-admin security add-user ${RIFOR_USER} password=${RIFOR_PASS} groups=admin
+perms="riak_kv.get"
+perms="${perms},riak_kv.put"
+perms="${perms},riak_kv.delete"
+perms="${perms},riak_kv.index"
+perms="${perms},riak_kv.mapreduce"
+perms="${perms},riak_kv.list_keys"
+perms="${perms},riak_kv.list_buckets"
+perms="${perms},riak_core.get_bucket"
+perms="${perms},riak_core.set_bucket"
+perms="${perms},riak_core.get_bucket_type"
+# perms="${perms},search.admin"
+# perms="${perms},search.query"
+riak-admin security grant ${perms} on any to admin
+
+riak-admin security add-source ${RIFOR_USER} 0.0.0.0/0 trust
+riak-admin security add-source all 127.0.0.1/32 trust
+
+
+
+
+
 # riak-admin ring_status
