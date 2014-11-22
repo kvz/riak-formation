@@ -40,7 +40,7 @@ resource "aws_security_group" "riak" {
         self = true
     }
 
-    // These are for maintenance
+    // SSH
     ingress {
         from_port = 22
         to_port = 22
@@ -48,10 +48,18 @@ resource "aws_security_group" "riak" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-    // These are for maintenance
+    // Https
     ingress {
         from_port = 8069
         to_port = 8069
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    // Http
+    ingress {
+        from_port = 8098
+        to_port = 8098
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }

@@ -285,7 +285,7 @@ platform_log_dir = /var/log/riak
 ##
 ## Acceptable values:
 ##   - an IP/port pair, e.g. 127.0.0.1:10011
-# listener.http.internal = 127.0.0.1:8098
+listener.http.public = 0.0.0.0:8098
 
 ## listener.protobuf.<name> is an IP address and TCP port that the Riak
 ## Protocol Buffers interface will bind.
@@ -294,7 +294,7 @@ platform_log_dir = /var/log/riak
 ##
 ## Acceptable values:
 ##   - an IP/port pair, e.g. 127.0.0.1:10011
-listener.protobuf.internal = 0.0.0.0:8087
+listener.protobuf.public = 0.0.0.0:8087
 
 ## The maximum length to which the queue of pending connections
 ## may grow. If set, it must be an integer > 0. If you anticipate a
@@ -313,7 +313,7 @@ listener.protobuf.internal = 0.0.0.0:8087
 ## Acceptable values:
 ##   - an IP/port pair, e.g. 127.0.0.1:10011
 ## listener.https.internal = 127.0.0.1:8098
-listener.https.internal = 0.0.0.0:8069
+listener.https.public = 0.0.0.0:8069
 
 ## How Riak will repair out-of-sync keys. Some features require
 ## this to be set to 'active', including search.
