@@ -35,6 +35,13 @@ Click any of the links, and you're right in the control panel:
 
 ![screen shot 2014-11-21 at 21 12 39](https://cloud.githubusercontent.com/assets/26752/5148857/4fc8815a-71c3-11e4-8fb0-2e2a6d04bf5c.png)
 
+## Todo
+
+- [ ] Make env file dictate ingress, ports, server count, etc. So that you can launch different Riak clusters by just sourcing different env files.
+- [ ] Simplify directory layout
+- [ ] Multi datacenter replication? Can we do that for free somehow?
+- [ ] Enable Search
+- [ ] Research/Document CRDTs in 2.0
 
 ## Credits
 
