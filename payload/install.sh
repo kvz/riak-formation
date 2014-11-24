@@ -90,7 +90,7 @@ find ~/.apt-updated -mmin -300 || (apt-get -qq update && touch ~/.apt-updated)
 
 if [ 1 -eq 1 ]; then
   echo "--> ${RIFOR_HOSTNAME} - Upgrade all packages"
-  yes| apt-get -qqfy dist-upgrade || true
+  yes| apt-get -qqfy --force-yes dist-upgrade || true
 else
   echo "--> ${RIFOR_HOSTNAME} - Upgrade packages with vulnerabilities"
   unattended-upgrade
