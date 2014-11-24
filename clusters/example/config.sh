@@ -4,7 +4,7 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename ${__file} .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)"
 
-export CLUSTER="production"
+export RIFOR_CLUSTER="production"
 export RIFOR_AWS_ACCESS_KEY="xxx"
 export RIFOR_AWS_SECRET_KEY="xxx"
 export RIFOR_AWS_REGION="us-east-1"

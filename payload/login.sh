@@ -11,7 +11,7 @@
 #
 #  - Kevin van Zonneveld <kevin@transloadit.com>
 
-echo "Sourced cluster config for this session: '${CLUSTER}'"
+echo "Sourced cluster config for this session: '${RIFOR_CLUSTER}'"
 
 # set -o xtrace
 echo "Creating wtf alias"

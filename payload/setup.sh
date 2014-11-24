@@ -19,8 +19,8 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-if [ -z "${CLUSTER}" ]; then
-  echo "Cluster ${CLUSTER} not recognized. "
+if [ -z "${RIFOR_CLUSTER}" ]; then
+  echo "Cluster ${RIFOR_CLUSTER} not recognized. "
   echo "Please first source clusters/production/config.sh"
   exit 1
 fi

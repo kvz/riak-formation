@@ -27,8 +27,8 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-if [ -z "${CLUSTER}" ]; then
-  echo "Deploy cluster '${CLUSTER}' not recognized. "
+if [ -z "${RIFOR_CLUSTER}" ]; then
+  echo "Deploy cluster '${RIFOR_CLUSTER}' not recognized. "
   echo "Please first e.g. source clusters/production/config.sh"
   exit 1
 fi
@@ -111,7 +111,7 @@ paint apt_install update-notifier-common
 
 
 echo "--> ${RIFOR_HOSTNAME} - Setup MOTD"
-echo "${RIFOR_APP_NAME} ${CLUSTER}" |figlet > /etc/motd
+echo "${RIFOR_APP_NAME} ${RIFOR_CLUSTER}" |figlet > /etc/motd
 
 
 echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for root user"

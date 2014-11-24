@@ -7,7 +7,7 @@
 #  - Looks at cluster for cloud provider credentials, keys and their locations
 #  - Takes a 1st argument, the step:
 #    - prepare: Install prerequisites
-#    - init   : Refreshes current infra state and saves to clusters/${CLUSTER}/terraform.tfstate
+#    - init   : Refreshes current infra state and saves to clusters/${RIFOR_CLUSTER}/terraform.tfstate
 #    - launch : Launches virtual machines at a provider (if needed) using Terraform's ./default.tf
 #    - seed   : Transmit the ./env and ./payload install scripts to remote homedir
 #    - install: Runs the ./payload/install.sh remotely, installing system software
@@ -31,8 +31,8 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-if [ -z "${CLUSTER:-}" ]; then
-  echo "Deploy cluster '${CLUSTER}' not recognized. "
+if [ -z "${RIFOR_CLUSTER:-}" ]; then
+  echo "Deploy cluster '${RIFOR_CLUSTER}' not recognized. "
   echo "Please first e.g. source clusters/production/config.sh"
   exit 1
 fi
@@ -44,7 +44,7 @@ __base="$(basename ${__file} .sh)"
 
 __rootdir="${__dir}"
 __terraformdir="${__rootdir}/terraform"
-__clusterdir="${__rootdir}/clusters/${CLUSTER}"
+__clusterdir="${__rootdir}/clusters/${RIFOR_CLUSTER}"
 __exampledir="${__rootdir}/clusters/example"
 __exampleinfrafile="${__exampledir}/default.tf"
 __payloaddir="${__rootdir}/payload"
@@ -217,7 +217,7 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
   terraformArgs="${terraformArgs} -var zone=${RIFOR_AWS_ZONE_ID}"
   terraformArgs="${terraformArgs} -var key_path=${RIFOR_SSH_KEY_FILE}"
   terraformArgs="${terraformArgs} -var key_name=${RIFOR_SSH_KEY_NAME}"
-  terraformArgs="${terraformArgs} -var cluster=${CLUSTER}"
+  terraformArgs="${terraformArgs} -var cluster=${RIFOR_CLUSTER}"
 
   if [ "${action}" = "init" ]; then
     if [ ! -f ${__statefile} ]; then

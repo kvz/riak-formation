@@ -32,7 +32,7 @@ Now type `make launch`. riak-formation will launch as many machines as you defin
 
 ![screen shot 2014-11-21 at 21 12 26](https://cloud.githubusercontent.com/assets/26752/5148855/4d7712fe-71c3-11e4-8bc8-72577dfcd2b2.png)
 
-Click any of the links, and you're right in the control panel:
+Click any of the links, and you're right inside the control panel:
 
 ![screen shot 2014-11-21 at 21 12 39](https://cloud.githubusercontent.com/assets/26752/5148857/4fc8815a-71c3-11e4-8fb0-2e2a6d04bf5c.png)
 
@@ -40,7 +40,7 @@ Click any of the links, and you're right in the control panel:
 
 - [ ] Make env file dictate ingress, ports, server count, etc. So that you can launch different Riak clusters by just sourcing different env files.
 - [ ] S3 emulation
-- [ ] Can we servie read-only json files
+- [ ] Can we serve read-only json files
 - [ ] Multi datacenter replication? Can we do that for free somehow?
 - [ ] Enable Search
 - [ ] Research/Document CRDTs in 2.0

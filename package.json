@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "async": "^0.9.0",
     "bash3boilerplate": "^1.0.3",
-    "environmental": "^1.2.1"
+    "debug": "^2.1.0",
+    "environmental": "^1.2.1",
+    "riakpbc": "^2.1.0"
   }
 }
