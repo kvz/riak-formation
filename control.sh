@@ -248,9 +248,10 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
   if [ "${action}" = "seed" ]; then
     # First copy bash3boilerplate locally
     rsync -a --progress --delete ${__rootdir}/node_modules/bash3boilerplate/ ${__payloaddir}/bash3boilerplate
-    rsync -a --progress --delete ${__clusterdir}/ ${__payloaddir}/cluster
+    rsync -a --progress --delete --exclude=terraform.* ${__clusterdir}/ ${__payloaddir}/cluster
     # Then sync upstream
     inParallel "sync" "~/payload/" "${__payloaddir}/*"
+    rm -rf ${__payloaddir}/bash3boilerplate ${__payloaddir}/cluster
     processed="${processed} ${action}" && continue
   fi
 
