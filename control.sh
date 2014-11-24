@@ -45,6 +45,8 @@ __base="$(basename ${__file} .sh)"
 __rootdir="${__dir}"
 __terraformdir="${__rootdir}/terraform"
 __clusterdir="${__rootdir}/clusters/${CLUSTER}"
+__exampledir="${__rootdir}/clusters/example"
+__exampleinfrafile="${__exampledir}/infra.tf"
 __payloaddir="${__rootdir}/payload"
 __terraformfile="${__terraformdir}/terraform"
 
@@ -147,6 +149,12 @@ if [ "${step}" = "remote_follower" ]; then
     fi
   done
 fi
+
+if ! ls ${__clusterdir}/*.tf > /dev/null 2>&1; then
+  echo "Borrowing ${__exampleinfrafile}"
+  cp "${__exampleinfrafile}" ${__clusterdir}/example.tf
+fi
+
 
 processed=""
 for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; do
@@ -267,5 +275,10 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
   fi
 done
 popd > /dev/null
+
+if [ -f "${__clusterdir}/example.tf" ]; then
+  echo "Cleaning up ${__clusterdir}/example.tf"
+  rm -f "${__clusterdir}/example.tf"
+fi
 
 echo "--> ${RIFOR_HOSTNAME} - completed:${processed} : )"
