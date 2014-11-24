@@ -26,7 +26,7 @@ Terraform config uses the [HLC](https://github.com/hashicorp/hcl) configuration 
 ## How
 
 First, **riak-formation** needs to know which cloud provider you wish to target, and the associated account. You can pass it these via cluster config. Either directly on the commandline, or add them to `clusters/production/config.sh`. `production` can be any name, you you could be deploying many completely different riak clusters from this project.
-Since `config.sh` supports many configuration options, it is not required to define your own cluster's infrastructure definitions (`*.tf`), it instead will automatically borrow `infra.tf` from the `example` cluster to reduce duplication. SSH keys, SSL keys, `config.sh`, state files, and plan files, do have to be administerd on a cluster-by-cluster basis.
+Since `config.sh` supports many configuration options, it is not required to define your own cluster's infrastructure definitions (`*.tf`), it instead will automatically borrow `default.tf` from the `example` cluster to reduce duplication. SSH keys, SSL keys, `config.sh`, state files, and plan files, do have to be administerd on a cluster-by-cluster basis.
 
 Now type `make launch`. riak-formation will launch as many machines as you defined, set up firewalls, install riak nodes, connect them together, set up Riak Control, and end with this summary:
 

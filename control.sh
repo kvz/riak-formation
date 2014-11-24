@@ -8,7 +8,7 @@
 #  - Takes a 1st argument, the step:
 #    - prepare: Install prerequisites
 #    - init   : Refreshes current infra state and saves to clusters/${CLUSTER}/terraform.tfstate
-#    - launch : Launches virtual machines at a provider (if needed) using Terraform's ./infra.tf
+#    - launch : Launches virtual machines at a provider (if needed) using Terraform's ./default.tf
 #    - seed   : Transmit the ./env and ./payload install scripts to remote homedir
 #    - install: Runs the ./payload/install.sh remotely, installing system software
 #    - upload : Upload the application
@@ -46,7 +46,7 @@ __rootdir="${__dir}"
 __terraformdir="${__rootdir}/terraform"
 __clusterdir="${__rootdir}/clusters/${CLUSTER}"
 __exampledir="${__rootdir}/clusters/example"
-__exampleinfrafile="${__exampledir}/infra.tf"
+__exampleinfrafile="${__exampledir}/default.tf"
 __payloaddir="${__rootdir}/payload"
 __terraformfile="${__terraformdir}/terraform"
 
@@ -152,7 +152,7 @@ fi
 
 if ! ls ${__clusterdir}/*.tf > /dev/null 2>&1; then
   echo "Borrowing ${__exampleinfrafile}"
-  cp "${__exampleinfrafile}" ${__clusterdir}/example.tf
+  cp "${__exampleinfrafile}" ${__clusterdir}/default.tf
 fi
 
 
@@ -279,9 +279,9 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
 done
 popd > /dev/null
 
-if [ -f "${__clusterdir}/example.tf" ]; then
-  echo "Cleaning up ${__clusterdir}/example.tf"
-  rm -f "${__clusterdir}/example.tf"
+if [ -f "${__clusterdir}/default.tf" ]; then
+  echo "Cleaning up ${__clusterdir}/default.tf"
+  rm -f "${__clusterdir}/default.tf"
 fi
 
 echo "--> ${RIFOR_HOSTNAME} - completed:${processed} : )"
