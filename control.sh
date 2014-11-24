@@ -4,10 +4,10 @@
 # This file:
 #
 #  - Runs on a workstation
-#  - Looks at environment for cloud provider credentials, keys and their locations
+#  - Looks at cluster for cloud provider credentials, keys and their locations
 #  - Takes a 1st argument, the step:
 #    - prepare: Install prerequisites
-#    - init   : Refreshes current infra state and saves to ./terraform.tfstate
+#    - init   : Refreshes current infra state and saves to clusters/${CLUSTER}/terraform.tfstate
 #    - launch : Launches virtual machines at a provider (if needed) using Terraform's ./infra.tf
 #    - seed   : Transmit the ./env and ./payload install scripts to remote homedir
 #    - install: Runs the ./payload/install.sh remotely, installing system software
@@ -16,7 +16,7 @@
 #  - Takes an optional 2nd argument: "done". If it's set, only 1 step will execute
 #  - Will cycle through all subsequential steps. So if you choose 'upload', 'setup' will
 #    automatically be executed
-#  - Looks at RIFOR_DRYRUN environment var. Set it to 1 to just show what will happen
+#  - Looks at RIFOR_DRYRUN cluster var. Set it to 1 to just show what will happen
 #
 # Run as:
 #
@@ -31,26 +31,42 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
+if [ -z "${CLUSTER:-}" ]; then
+  echo "Deploy cluster '${CLUSTER}' not recognized. "
+  echo "Please first e.g. source clusters/production/config.sh"
+  exit 1
+fi
+
 # Set magic variables for current FILE & DIR
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename ${__file} .sh)"
 
+__rootdir="${__dir}"
+__terraformdir="${__rootdir}/terraform"
+__clusterdir="${__rootdir}/clusters/${CLUSTER}"
+__payloaddir="${__rootdir}/payload"
+__terraformfile="${__terraformdir}/terraform"
+
+__planfile="${__clusterdir}/terraform.plan"
+__statefile="${__clusterdir}/terraform.tfstate"
+
 terraform_version="0.3.1"
+
 
 
 ### Functions
 ####################################################################################
 
 function sync() {
-  [ -z "${host}" ] && host="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
+  [ -z "${host}" ] && host="$(${__terraformfile} output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
   rsync \
    --archive \
    --delete \
    --exclude=.git* \
    --exclude=node_modules \
+   --exclude=terraform.* \
    --itemize-changes \
    --checksum \
    --no-times \
@@ -67,7 +83,7 @@ function sync() {
 }
 
 function remote() {
-  [ -z "${host}" ] && host="$(cd "${__dir}" && ./terraform/terraform output leader_address)"
+  [ -z "${host}" ] && host="$(${__terraformfile} output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
   ssh ${host} \
     -i "${RIFOR_SSH_KEY_FILE}" \
@@ -80,7 +96,7 @@ function remote() {
 # This is so that the leader can be setup, and then all the followers can join
 function inParallel () {
   cnt=0
-  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+  for host in $(${__terraformfile} output public_addresses); do
     let "cnt = cnt + 1"
     if [ "${cnt}" = 1 ]; then
       # wait on leader leader
@@ -114,6 +130,8 @@ host=""
 ### Runtime
 ####################################################################################
 
+pushd "${__clusterdir}" > /dev/null
+
 if [ "${step}" = "remote" ]; then
   remote ${@:2}
   exit ${?}
@@ -121,7 +139,7 @@ fi
 
 if [ "${step}" = "remote_follower" ]; then
   cnt=0
-  for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+  for host in $(${__terraformfile} output public_addresses); do
     let "cnt = cnt + 1"
     if [ "${cnt}" = 2 ]; then
       remote ${@:2}
@@ -130,7 +148,6 @@ if [ "${step}" = "remote_follower" ]; then
   done
 fi
 
-pushd "${__dir}" > /dev/null
 processed=""
 for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; do
   [ "${action}" = "${step}" ] && enabled=1
@@ -158,13 +175,14 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
     arch="amd64"
     filename="terraform_${terraform_version}_${os}_${arch}.zip"
     url="https://dl.bintray.com/mitchellh/terraform/${filename}"
-    dir="${__dir}/terraform"
+    dir="${__terraformdir}"
     mkdir -p "${dir}"
     pushd "${dir}" > /dev/null
       if [ ! -f "${filename}" ] || ! ./terraform --version |grep "Terraform v${terraform_version}"; then
         rm -f "${filename}" || true
         wget "${url}"
         unzip -o "${filename}"
+        rm -f "${filename}"
       fi
       ./terraform --version |grep "Terraform v${terraform_version}"
     popd > /dev/null
@@ -175,47 +193,44 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
       echo -e "\n\n" | ssh-keygen -t rsa -C "${RIFOR_SSH_EMAIL}" -f "${RIFOR_SSH_KEY_FILE}"
       notice "You'll need to add ${RIFOR_SSH_KEY_FILE}.pub to the provider"
     fi
-    chmod 700 ${__root}/envs
+    chmod 700 ${__rootdir}/clusters
     chmod 600 ${RIFOR_SSH_KEY_FILE}*
 
     processed="${processed} ${action}" && continue
   fi
 
+  # Digital ocean:
   # ssh_key_fingerprint="$(ssh-keygen -lf ${RIFOR_SSH_KEY_FILE}.pub | awk '{print $2}')"
 
   terraformArgs=""
-  # if [ "${debug}" = "1" ]; then
-  #   terraformArgs="${terraformArgs} -debug"
-  # fi
   terraformArgs="${terraformArgs} -var secret_key=${RIFOR_AWS_SECRET_KEY}"
   terraformArgs="${terraformArgs} -var access_key=${RIFOR_AWS_ACCESS_KEY}"
   terraformArgs="${terraformArgs} -var region=${RIFOR_AWS_REGION}"
   terraformArgs="${terraformArgs} -var zone=${RIFOR_AWS_ZONE_ID}"
-  # terraformArgs="${terraformArgs} -var RIFOR_DOMAIN=${RIFOR_DOMAIN}"
   terraformArgs="${terraformArgs} -var key_path=${RIFOR_SSH_KEY_FILE}"
   terraformArgs="${terraformArgs} -var key_name=${RIFOR_SSH_KEY_NAME}"
-  terraformArgs="${terraformArgs} -var deploy_env=${DEPLOY_ENV}"
+  terraformArgs="${terraformArgs} -var cluster=${CLUSTER}"
 
   if [ "${action}" = "init" ]; then
-    if [ ! -f terraform.tfstate ]; then
+    if [ ! -f ${__statefile} ]; then
       echo "Nothing to refresh yet."
     else
-      ./terraform/terraform refresh ${terraformArgs}
+      ${__terraformfile} refresh ${terraformArgs}
     fi
   fi
 
   if [ "${action}" = "plan" ]; then
-    rm -f ./plan.bin
-    ./terraform/terraform plan ${terraformArgs} -out ./plan.bin
+    rm -f ${__planfile}
+    ${__terraformfile} plan ${terraformArgs} -out ${__planfile}
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "launch" ]; then
-    if [ -f ./plan.bin ]; then
+    if [ -f ${__planfile} ]; then
       echo "--> Press CTRL+C now if you are unsure! Executing plan in ${RIFOR_VERIFY_TIMEOUT}s..."
       [ "${dryRun}" -eq 1 ] && echo "--> Dry run break" && exit 1
       sleep ${RIFOR_VERIFY_TIMEOUT}
-      ./terraform/terraform apply ./plan.bin
+      ${__terraformfile} apply ${__planfile}
     else
       echo "Skipping, no changes. "
     fi
@@ -224,26 +239,27 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
 
   if [ "${action}" = "seed" ]; then
     # First copy bash3boilerplate locally
-    rsync -a --progress --delete ${__root}/node_modules/bash3boilerplate/ ${__dir}/payload/bash3boilerplate
+    rsync -a --progress --delete ${__rootdir}/node_modules/bash3boilerplate/ ${__payloaddir}/bash3boilerplate
+    rsync -a --progress --delete ${__clusterdir}/ ${__payloaddir}/cluster
     # Then sync upstream
-    inParallel "sync" "~/" "${__dir}/payload" "${__root}/envs"
+    inParallel "sync" "~/payload/" "${__payloaddir}/*"
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "install" ]; then
-    inParallel "remote" "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/install.sh\""
+    inParallel "remote" "bash -c \"source ~/cluster/config.sh && sudo -E bash ~/payload/install.sh\""
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "setup" ]; then
-    inParallel "remote" "bash -c \"source ~/envs/${DEPLOY_ENV}.sh && sudo -E bash ~/payload/setup.sh\""
+    inParallel "remote" "bash -c \"source ~/cluster/config.sh && sudo -E bash ~/payload/setup.sh\""
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "show" ]; then
     remote "sudo riak-admin status | grep riak_kv_version"
 
-    for host in $(cd "${__dir}" && ./terraform/terraform output public_addresses); do
+    for host in $(${__terraformfile} output public_addresses); do
       echo "https://${RIFOR_USER}:${RIFOR_PASS}@${host}:8069/admin#/snapshot"
     done
 

@@ -12,7 +12,7 @@
 #     - node.js
 #     - munin monitoring
 #  - uses ./bash3boilerplate/src/templater.sh and ./templates/* to write (e.g. nginx)
-#    config files, replacing placeholders with environment variables
+#    config files, replacing placeholders with cluster variables
 #  - installs login.sh that is run upon logging in and contains
 #    sysadmin convenience shortcuts such as sourcing env and the alias `wtf`
 #
@@ -27,9 +27,9 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-if [ -z "${DEPLOY_ENV}" ]; then
-  echo "Deploy environment '${DEPLOY_ENV}' not recognized. "
-  echo "Please first e.g. source envs/production.sh"
+if [ -z "${CLUSTER}" ]; then
+  echo "Deploy cluster '${CLUSTER}' not recognized. "
+  echo "Please first e.g. source clusters/production/config.sh"
   exit 1
 fi
 
@@ -111,7 +111,7 @@ paint apt_install update-notifier-common
 
 
 echo "--> ${RIFOR_HOSTNAME} - Setup MOTD"
-echo "${RIFOR_APP_NAME} ${DEPLOY_ENV}" |figlet > /etc/motd
+echo "${RIFOR_APP_NAME} ${CLUSTER}" |figlet > /etc/motd
 
 
 echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for root user"
@@ -119,24 +119,24 @@ envUser=""
 if [ -d /home/vagrant ]; then
   echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for vagrant user"
   envUser="vagrant"
-  if ! grep -q "envs/${DEPLOY_ENV}.sh" /home/vagrant/.bashrc; then
+  if ! grep -q "config.sh" /home/vagrant/.bashrc; then
     # avoid the risk of an exit !=0 will prevent logins
-    echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /home/vagrant/.bashrc
+    echo "cd \"${RIFOR_APP_DIR}\" && source ~/cluster/config.sh && source ~/payload/login.sh || true" >> /home/vagrant/.bashrc
     chown vagrant /home/vagrant/.bashrc
   fi
 fi
 if [ -d /home/ubuntu ]; then
   echo "--> ${RIFOR_HOSTNAME} - Install Convenience scripts for ubuntu user"
   envUser="ubuntu"
-  if ! grep -q "envs/${DEPLOY_ENV}.sh" /home/ubuntu/.bashrc; then
+  if ! grep -q "config.sh" /home/ubuntu/.bashrc; then
     # avoid the risk of an exit !=0 will prevent logins
-    echo "cd \"${RIFOR_APP_DIR}\" && source ~/envs/${DEPLOY_ENV}.sh && source ~/payload/login.sh || true" >> /home/ubuntu/.bashrc
+    echo "cd \"${RIFOR_APP_DIR}\" && source ~/cluster/config.sh && source ~/payload/login.sh || true" >> /home/ubuntu/.bashrc
     chown ubuntu /home/ubuntu/.bashrc
   fi
 fi
-if ! grep -q "envs/${DEPLOY_ENV}.sh" /root/.bashrc; then
+if ! grep -q "config.sh" /root/.bashrc; then
   # avoid the risk of an exit !=0 will prevent logins
-  echo "cd \"${RIFOR_APP_DIR}\" && source ~${envUser}/envs/${DEPLOY_ENV}.sh && source ~${envUser}/payload/login.sh || true" >> /root/.bashrc
+  echo "cd \"${RIFOR_APP_DIR}\" && source ~${envUser}/cluster/config.sh && source ~${envUser}/payload/login.sh || true" >> /root/.bashrc
   chown root /root/.bashrc
 fi
 

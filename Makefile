@@ -9,21 +9,21 @@ setup: git-check
 
 setup-unsafe:
 	git pull
-	source envs/production.sh && scripts/control.sh seed done
-	source envs/production.sh && scripts/control.sh setup
+	source clusters/production/config.sh && ./control.sh seed done
+	source clusters/production/config.sh && ./control.sh setup
 
 launch: git-check
 	@(MAKE) launch-unsafe
 
 launch-unsafe:
 	git pull
-	source envs/production.sh && scripts/control.sh init
+	source clusters/production/config.sh && ./control.sh init
 
 ssh-leader:
-	source envs/production.sh && scripts/control.sh remote
+	source clusters/production/config.sh && ./control.sh remote
 
 ssh-follower:
-	source envs/production.sh && scripts/control.sh remote_follower
+	source clusters/production/config.sh && ./control.sh remote_follower
 
 release-major: build test
 	npm version major -m "Release %s"

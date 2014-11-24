@@ -204,7 +204,7 @@ erlang.max_ports = 65536
 ## Acceptable values:
 ##   - the path to a file
 ## ssl.certfile = $(platform_etc_dir)/cert.pem
-ssl.certfile = $(platform_etc_dir)/selfsigned.crt
+ssl.certfile = $(platform_etc_dir)/ssl-key.crt
 
 ## Default key location for https can be overridden with the ssl
 ## config variable, for example:
@@ -212,7 +212,7 @@ ssl.certfile = $(platform_etc_dir)/selfsigned.crt
 ## Acceptable values:
 ##   - the path to a file
 ## ssl.keyfile = $(platform_etc_dir)/key.pem
-ssl.keyfile = $(platform_etc_dir)/selfsigned.key
+ssl.keyfile = $(platform_etc_dir)/ssl-key.key
 
 ## Default signing authority location for https can be overridden
 ## with the ssl config variable, for example:
@@ -220,7 +220,7 @@ ssl.keyfile = $(platform_etc_dir)/selfsigned.key
 ## Acceptable values:
 ##   - the path to a file
 ## ssl.cacertfile = $(platform_etc_dir)/cacertfile.pem
-# ssl.cacertfile = $(platform_etc_dir)/selfsigned.csr
+# ssl.cacertfile = $(platform_etc_dir)/ssl-key.csr
 
 ## DTrace support Do not enable 'dtrace' unless your Erlang/OTP
 ## runtime is compiled to support DTrace.  DTrace is available in

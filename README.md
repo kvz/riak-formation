@@ -25,7 +25,7 @@ Terraform config uses the [HLC](https://github.com/hashicorp/hcl) configuration 
 
 ## How
 
-First, **riak-formation** needs to know which cloud provider you wish to target, and the associated account. You can pass it these via environment config. Either directly on the commandline, or add them to `envs/production.sh`.
+First, **riak-formation** needs to know which cloud provider you wish to target, and the associated account. You can pass it these via cluster config. Either directly on the commandline, or add them to `clusters/production/config.sh`.
 
 Now type `make launch`. riak-formation will launch as many machines as you defined, set up firewalls, install riak nodes, connect them together, set up Riak Control, and end with this summary:
 
@@ -38,10 +38,12 @@ Click any of the links, and you're right in the control panel:
 ## Todo
 
 - [ ] Make env file dictate ingress, ports, server count, etc. So that you can launch different Riak clusters by just sourcing different env files.
-- [ ] Simplify directory layout
+- [ ] S3 emulation
+- [ ] Can we servie read-only json files
 - [ ] Multi datacenter replication? Can we do that for free somehow?
 - [ ] Enable Search
 - [ ] Research/Document CRDTs in 2.0
+- [x] Simplify directory layout
 
 ## Credits
 

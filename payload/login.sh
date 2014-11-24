@@ -3,7 +3,7 @@
 #
 # This file:
 #
-#  - sources environment and provides convenience aliases such as `wtf`
+#  - sources cluster and provides convenience aliases such as `wtf`
 #
 # It's typically called from .bashrc, and written there by install.sh
 #
@@ -11,7 +11,7 @@
 #
 #  - Kevin van Zonneveld <kevin@transloadit.com>
 
-echo "Sourced environment for this session: '${DEPLOY_ENV}'"
+echo "Sourced cluster config for this session: '${CLUSTER}'"
 
 # set -o xtrace
 echo "Creating wtf alias"

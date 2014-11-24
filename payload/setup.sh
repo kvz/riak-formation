@@ -19,9 +19,9 @@ set -o errexit
 set -o nounset
 # set -o xtrace
 
-if [ -z "${DEPLOY_ENV}" ]; then
-  echo "Environment ${DEPLOY_ENV} not recognized. "
-  echo "Please first source envs/development.sh or source envs/production.sh"
+if [ -z "${CLUSTER}" ]; then
+  echo "Cluster ${CLUSTER} not recognized. "
+  echo "Please first source clusters/production/config.sh"
   exit 1
 fi
 
@@ -55,6 +55,7 @@ function paint () (
 
 
 echo "--> ${RIFOR_HOSTNAME} - Reloading Nginx"
+# rm -f /etc/nginx/sites-*/* ||true
 bash ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx.sh /etc/nginx/nginx.conf
 bash ${__dir}/bash3boilerplate/src/templater.sh ${__dir}/templates/nginx-vhost.sh /etc/nginx/sites-available/${RIFOR_APP_NAME}
 ln -nfs /etc/nginx/{sites-available/${RIFOR_APP_NAME},sites-enabled/${RIFOR_APP_NAME}}
@@ -78,13 +79,8 @@ chgrp -R www-data /var/cache/munin/www
 service munin-node restart
 
 
-echo "--> ${RIFOR_HOSTNAME} - Install Self signed certificate"
-rsync -a --progress ${__dir}/ssl/* /etc/riak/
-pushd /etc/riak
-  if [ ! -f server.key ]; then
-    openssl req -nodes -x509 -newkey rsa:4096 -keyout server.key -out server.csr -days 356 -subj "/C=US/ST=Oregon/L=Portland/O=IT/CN=www.example.com"
-  fi
-popd
+echo "--> ${RIFOR_HOSTNAME} - Install SSL Certificate"
+rsync -a --progress ${__dir}/cluster/ssl-key* /etc/riak/
 
 
 echo "--> ${RIFOR_HOSTNAME} - Reloading Riak"
