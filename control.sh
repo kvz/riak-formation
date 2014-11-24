@@ -246,12 +246,14 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
   fi
 
   if [ "${action}" = "seed" ]; then
-    # First copy bash3boilerplate locally
+    # First enrich the payload with bash3boilerplate and cluster specific config
     rsync -a --progress --delete ${__rootdir}/node_modules/bash3boilerplate/ ${__payloaddir}/bash3boilerplate
-    rsync -a --progress --delete --exclude=terraform.* ${__clusterdir}/ ${__payloaddir}/cluster
+    mkdir -p ${__payloaddir}/cluster
+    cp ${__clusterdir}/config.sh ${__payloaddir}/cluster/
+    cp ${__clusterdir}/ssl-key.* ${__payloaddir}/cluster/
     # Then sync upstream
     inParallel "sync" "~/payload/" "${__payloaddir}/*"
-    rm -rf ${__payloaddir}/bash3boilerplate ${__payloaddir}/cluster
+    rm -rf ${__payloaddir}/cluster
     processed="${processed} ${action}" && continue
   fi
 
