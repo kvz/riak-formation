@@ -4,7 +4,7 @@ Create/restore a riak cluster on any cloudprovider using Terraform
 
 ## What
 
- - [Riak](http://basho.com/riak/) is fine distributed key-value store built by [Basho](http://basho.com/)
+ - [Riak](http://basho.com/riak/) is a fine distributed key-value store built by [Basho](http://basho.com/)
  - [Riak CS](http://basho.com/riak-cloud-storage/) is an addon so that you can build your own S3 compatible storage service, with Riak as a backend.
  - [Terraform](http://www.terraform.io/) is a tool to launch clusters in the cloud, using nothing but simple configuration files.
 
@@ -46,6 +46,9 @@ Click any of the links, and you're right inside the control panel:
 - [ ] Research/Document CRDTs in 2.0
 - [ ] Backup / Restore
 - [x] Simplify directory layout
+- [ ] Store assembly as MAP: 
+
+> "Maps are the richest of the Riak Data Types because within the fields of a map you can nest any of the five Data Types, including maps themselves (you can even embed maps within maps, and maps within those maps, and so on). " - http://docs.basho.com/riak/latest/theory/concepts/crdts/
 
 ## Credits
 
@@ -56,4 +59,7 @@ This project draws from
  - [Call Me Maybe: Carly Rae Jepsen and the Perils of Network Partitions - RICON East 2013](https://www.youtube.com/watch?v=mxdpqr-loyA)
  - [Jepsen: ZK, NuoDB, Kafka, & Cassandra](https://www.youtube.com/watch?v=NsI51Mo6r3o) 
  - [Kyle Kingsbury and Al Tobey - Cassandra and Go Doubleheader](https://www.youtube.com/watch?v=oEFqxi_n1vU)
+ - [Readings in conflict-free replicated data types](http://christophermeiklejohn.com/crdt/2014/07/22/readings-in-crdts.html)
+ - [A comprehensive study of Convergent and Commutative Replicated Data Types](http://hal.upmc.fr/file/index/docid/555588/filename/techreport.pdf)
+
  
