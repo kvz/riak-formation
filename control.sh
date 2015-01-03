@@ -8,11 +8,13 @@
 #  - Takes a 1st argument, the step:
 #    - prepare: Install prerequisites
 #    - init   : Refreshes current infra state and saves to clusters/${RIFOR_CLUSTER}/terraform.tfstate
+#    - plan   : Shows terraform plan and saves it
 #    - launch : Launches virtual machines at a provider (if needed) using Terraform's ./default.tf
 #    - seed   : Transmit the ./env and ./payload install scripts to remote homedir
 #    - install: Runs the ./payload/install.sh remotely, installing system software
 #    - upload : Upload the application
 #    - setup  : Runs the ./payload/setup.sh remotely, installing app dependencies and starting it
+#    - show   : Displays active platform
 #  - Takes an optional 2nd argument: "done". If it's set, only 1 step will execute
 #  - Will cycle through all subsequential steps. So if you choose 'upload', 'setup' will
 #    automatically be executed
@@ -150,6 +152,7 @@ if [ "${step}" = "remote_follower" ]; then
   done
 fi
 
+# We don't have a .tf file for this cluster, copy & use example.
 if ! ls ${__clusterdir}/*.tf > /dev/null 2>&1; then
   echo "Borrowing ${__exampleinfrafile}"
   cp "${__exampleinfrafile}" ${__clusterdir}/default.tf
@@ -179,7 +182,6 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
     fi
 
     # Install Terraform
-    terraform_version="0.3.1"
     arch="amd64"
     filename="terraform_${terraform_version}_${os}_${arch}.zip"
     url="https://dl.bintray.com/mitchellh/terraform/${filename}"
@@ -195,11 +197,10 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
       ./terraform --version |grep "Terraform v${terraform_version}"
     popd > /dev/null
 
-
     # Install SSH Keys
     if [ ! -f "${RIFOR_SSH_KEY_FILE}" ]; then
       echo -e "\n\n" | ssh-keygen -t rsa -C "${RIFOR_SSH_EMAIL}" -f "${RIFOR_SSH_KEY_FILE}"
-      notice "You'll need to add ${RIFOR_SSH_KEY_FILE}.pub to the provider"
+      echo "You'll need to add ${RIFOR_SSH_KEY_FILE}.pub to the provider"
     fi
     chmod 700 ${__rootdir}/clusters
     chmod 600 ${RIFOR_SSH_KEY_FILE}*
