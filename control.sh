@@ -221,11 +221,11 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
   terraformArgs="${terraformArgs} -var cluster=${RIFOR_CLUSTER}"
 
   if [ "${action}" = "init" ]; then
-    if [ ! -f ${__statefile} ]; then
-      echo "Nothing to refresh yet."
-    else
-      ${__terraformfile} refresh ${terraformArgs}
-    fi
+    # if [ ! -f ${__statefile} ]; then
+    #   echo "Nothing to refresh yet."
+    # else
+    ${__terraformfile} refresh ${terraformArgs} || true
+    # fi
   fi
 
   if [ "${action}" = "plan" ]; then
@@ -259,12 +259,22 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
   fi
 
   if [ "${action}" = "install" ]; then
-    inParallel "remote" "bash -c \"source ~/cluster/config.sh && sudo -E bash ~/payload/install.sh\""
+    inParallel "remote" "bash -c \"source ~/payload/cluster/config.sh && sudo -E bash ~/payload/install.sh\""
+    processed="${processed} ${action}" && continue
+  fi
+
+  if [ "${action}" = "upload" ]; then
+    # seed, because folks will expect upload to also refresh the setup.sh and envs:
+    # ${__file} seed done > /dev/null
+    # actual app upload:
+    # inParallel "sync" /srv/current "${__rootdir}/" --exclude=envs --exclude=scripts
+
+    # We don't have an 'app' to upload
     processed="${processed} ${action}" && continue
   fi
 
   if [ "${action}" = "setup" ]; then
-    inParallel "remote" "bash -c \"source ~/cluster/config.sh && sudo -E bash ~/payload/setup.sh\""
+    inParallel "remote" "bash -c \"source ~/payload/cluster/config.sh && sudo -E bash ~/payload/setup.sh\""
     processed="${processed} ${action}" && continue
   fi
 
