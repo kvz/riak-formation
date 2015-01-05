@@ -8,7 +8,7 @@
 #  - Takes a 1st argument, the step:
 #    - prepare: Install prerequisites
 #    - init   : Refreshes current infra state and saves to clusters/${RIFOR_CLUSTER}/terraform.tfstate
-#    - plan   : Shows terraform plan and saves it
+#    - plan   : Shows infra changes and saves in an executable plan
 #    - launch : Launches virtual machines at a provider (if needed) using Terraform's ./default.tf
 #    - seed   : Transmit the ./env and ./payload install scripts to remote homedir
 #    - install: Runs the ./payload/install.sh remotely, installing system software
@@ -62,7 +62,7 @@ terraform_version="0.3.1"
 ### Functions
 ####################################################################################
 
-function sync() {
+function syncUp() {
   [ -z "${host}" ] && host="$(${__terraformfile} output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
   rsync \
@@ -81,6 +81,7 @@ function sync() {
     -i \"${RIFOR_SSH_KEY_FILE}\" \
     -l ${RIFOR_SSH_USER} \
     -o UserKnownHostsFile=/dev/null \
+    -o CheckHostIP=no \
     -o StrictHostKeyChecking=no" \
    ${@:2} \
   ${host}:${1}
@@ -93,6 +94,7 @@ function remote() {
     -i "${RIFOR_SSH_KEY_FILE}" \
     -l ${RIFOR_SSH_USER} \
     -o UserKnownHostsFile=/dev/null \
+    -o CheckHostIP=no \
     -o StrictHostKeyChecking=no "${@:-}"
 }
 
@@ -160,7 +162,7 @@ fi
 
 
 processed=""
-for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; do
+for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup" "show"; do
   [ "${action}" = "${step}" ] && enabled=1
   [ "${enabled}" -eq 0 ] && continue
   if [ -n "${processed}" ] && [ "${afterone}" = "done" ]; then
@@ -212,13 +214,13 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
   # ssh_key_fingerprint="$(ssh-keygen -lf ${RIFOR_SSH_KEY_FILE}.pub | awk '{print $2}')"
 
   terraformArgs=""
-  terraformArgs="${terraformArgs} -var secret_key=${RIFOR_AWS_SECRET_KEY}"
-  terraformArgs="${terraformArgs} -var access_key=${RIFOR_AWS_ACCESS_KEY}"
-  terraformArgs="${terraformArgs} -var region=${RIFOR_AWS_REGION}"
-  terraformArgs="${terraformArgs} -var zone=${RIFOR_AWS_ZONE_ID}"
-  terraformArgs="${terraformArgs} -var key_path=${RIFOR_SSH_KEY_FILE}"
-  terraformArgs="${terraformArgs} -var key_name=${RIFOR_SSH_KEY_NAME}"
-  terraformArgs="${terraformArgs} -var cluster=${RIFOR_CLUSTER}"
+  terraformArgs="${terraformArgs} -var secret_key=\"${RIFOR_AWS_SECRET_KEY}\""
+  terraformArgs="${terraformArgs} -var access_key=\"${RIFOR_AWS_ACCESS_KEY}\""
+  terraformArgs="${terraformArgs} -var region=\"${RIFOR_AWS_REGION}\""
+  terraformArgs="${terraformArgs} -var zone=\"${RIFOR_AWS_ZONE_ID}\""
+  terraformArgs="${terraformArgs} -var key_path=\"${RIFOR_SSH_KEY_FILE}\""
+  terraformArgs="${terraformArgs} -var key_name=\"${RIFOR_SSH_KEY_NAME}\""
+  terraformArgs="${terraformArgs} -var cluster=\"${RIFOR_CLUSTER}\""
 
   if [ "${action}" = "init" ]; then
     # if [ ! -f ${__statefile} ]; then
@@ -230,7 +232,7 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
 
   if [ "${action}" = "plan" ]; then
     rm -f ${__planfile}
-    ${__terraformfile} plan ${terraformArgs} -out ${__planfile}
+    ${__terraformfile} plan -refresh=false ${terraformArgs} -out ${__planfile}
     processed="${processed} ${action}" && continue
   fi
 
@@ -252,8 +254,8 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
     mkdir -p ${__payloaddir}/cluster
     cp ${__clusterdir}/config.sh ${__payloaddir}/cluster/
     cp ${__clusterdir}/ssl-key.* ${__payloaddir}/cluster/
-    # Then sync upstream
-    inParallel "sync" "~/payload/" "${__payloaddir}/*"
+    # Then syncUp upstream
+    inParallel "syncUp" "~/payload/" "${__payloaddir}/*"
     rm -rf ${__payloaddir}/cluster
     processed="${processed} ${action}" && continue
   fi
@@ -267,7 +269,7 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "setup" "show"; 
     # seed, because folks will expect upload to also refresh the setup.sh and envs:
     # ${__file} seed done > /dev/null
     # actual app upload:
-    # inParallel "sync" /srv/current "${__rootdir}/" --exclude=envs --exclude=scripts
+    # inParallel "syncUp" /srv/current "${__rootdir}/" --exclude=envs --exclude=scripts
 
     # We don't have an 'app' to upload
     processed="${processed} ${action}" && continue
