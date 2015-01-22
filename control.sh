@@ -45,17 +45,17 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename ${__file} .sh)"
 
 __rootdir="${__dir}"
-__terraformdir="${__rootdir}/terraform"
+__terraformDir="${__rootdir}/terraform"
 __clusterdir="${__rootdir}/clusters/${RIFOR_CLUSTER}"
 __exampledir="${__rootdir}/clusters/example"
 __exampleinfrafile="${__exampledir}/default.tf"
 __payloaddir="${__rootdir}/payload"
-__terraformfile="${__terraformdir}/terraform"
+__terraformExe="${__terraformDir}/terraform"
 
 __planfile="${__clusterdir}/terraform.plan"
 __statefile="${__clusterdir}/terraform.tfstate"
 
-terraform_version="0.3.1"
+__terraformVersion="0.3.1"
 
 
 
@@ -63,7 +63,7 @@ terraform_version="0.3.1"
 ####################################################################################
 
 function syncUp() {
-  [ -z "${host}" ] && host="$(${__terraformfile} output leader_address)"
+  [ -z "${host}" ] && host="$(${__terraformExe} output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
   rsync \
    --archive \
@@ -88,7 +88,7 @@ function syncUp() {
 }
 
 function remote() {
-  [ -z "${host}" ] && host="$(${__terraformfile} output leader_address)"
+  [ -z "${host}" ] && host="$(${__terraformExe} output leader_address)"
   chmod 600 ${RIFOR_SSH_KEY_FILE}*
   ssh ${host} \
     -i "${RIFOR_SSH_KEY_FILE}" \
@@ -102,7 +102,7 @@ function remote() {
 # This is so that the leader can be setup, and then all the followers can join
 function inParallel () {
   cnt=0
-  for host in $(${__terraformfile} output public_addresses); do
+  for host in $(${__terraformExe} output public_addresses); do
     let "cnt = cnt + 1"
     if [ "${cnt}" = 1 ]; then
       # wait on leader leader
@@ -145,7 +145,7 @@ fi
 
 if [ "${step}" = "remote_follower" ]; then
   cnt=0
-  for host in $(${__terraformfile} output public_addresses); do
+  for host in $(${__terraformExe} output public_addresses); do
     let "cnt = cnt + 1"
     if [ "${cnt}" = 2 ]; then
       remote ${@:2}
@@ -185,18 +185,18 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"
 
     # Install Terraform
     arch="amd64"
-    filename="terraform_${terraform_version}_${os}_${arch}.zip"
+    filename="terraform_${__terraformVersion}_${os}_${arch}.zip"
     url="https://dl.bintray.com/mitchellh/terraform/${filename}"
-    dir="${__terraformdir}"
+    dir="${__terraformDir}"
     mkdir -p "${dir}"
     pushd "${dir}" > /dev/null
-      if [ ! -f "${filename}" ] || ! ./terraform --version |grep "Terraform v${terraform_version}"; then
+      if ! ./terraform --version |grep "Terraform v${__terraformVersion}"; then
         rm -f "${filename}" || true
         wget "${url}"
         unzip -o "${filename}"
         rm -f "${filename}"
       fi
-      ./terraform --version |grep "Terraform v${terraform_version}"
+      ./terraform --version |grep "Terraform v${__terraformVersion}"
     popd > /dev/null
 
     # Install SSH Keys
@@ -226,13 +226,13 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"
     # if [ ! -f ${__statefile} ]; then
     #   echo "Nothing to refresh yet."
     # else
-    ${__terraformfile} refresh ${terraformArgs} || true
+    ${__terraformExe} refresh ${terraformArgs} || true
     # fi
   fi
 
   if [ "${action}" = "plan" ]; then
     rm -f ${__planfile}
-    ${__terraformfile} plan -refresh=false ${terraformArgs} -out ${__planfile}
+    ${__terraformExe} plan -refresh=false ${terraformArgs} -out ${__planfile}
     processed="${processed} ${action}" && continue
   fi
 
@@ -241,7 +241,7 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"
       echo "--> Press CTRL+C now if you are unsure! Executing plan in ${RIFOR_VERIFY_TIMEOUT}s..."
       [ "${dryRun}" -eq 1 ] && echo "--> Dry run break" && exit 1
       sleep ${RIFOR_VERIFY_TIMEOUT}
-      ${__terraformfile} apply ${__planfile}
+      ${__terraformExe} apply ${__planfile}
     else
       echo "Skipping, no changes. "
     fi
@@ -283,7 +283,7 @@ for action in "prepare" "init" "plan" "launch" "seed" "install" "upload" "setup"
   if [ "${action}" = "show" ]; then
     remote "sudo riak-admin status | grep riak_kv_version"
 
-    for host in $(${__terraformfile} output public_addresses); do
+    for host in $(${__terraformExe} output public_addresses); do
       echo "https://${RIFOR_USER}:${RIFOR_PASS}@${host}:8069/admin#/snapshot"
     done
 
