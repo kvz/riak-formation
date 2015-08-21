@@ -110,11 +110,9 @@ async.waterfall [
       callback null, value
 ], (err, result) ->
   if err
-    throw "Aborting on error. #{err}"
+    throw new Error "Aborting on error. #{err}"
 
   debug util.inspect
     result:result
 
   process.exit 0
-
-
